@@ -70,16 +70,21 @@ export default function RootLayout() {
 function AuthNavigation() {
   const status = useAuthStore((state) => state.status);
   const isNewUser = useAuthStore((state) => state.isNewUser);
+  const postLoginRoute = useAuthStore((state) => state.postLoginRoute);
   const segments = useSegments();
   const rootSegment = segments[0];
   const childSegment = segments[1];
 
   if (status === 'unauthenticated') {
-    if (rootSegment !== '(auth)' || childSegment === 'complete-profile') {
-      return <Redirect href="/(auth)/login" />;
+    if (rootSegment === '(auth)') {
+      if (childSegment === 'complete-profile') return <Redirect href="/(tabs)" />;
+    } else if (rootSegment !== '(tabs)') {
+      return <Redirect href="/(tabs)" />;
     }
   } else if (status === 'authenticated') {
-    const destination = isNewUser ? '/(auth)/complete-profile' : '/(tabs)';
+    const destination = isNewUser
+      ? '/(auth)/complete-profile'
+      : (postLoginRoute ?? '/(tabs)');
     if (rootSegment === '(auth)') {
       if (childSegment === 'login') return <Stack screenOptions={{ headerShown: false }} />;
       if (childSegment !== 'complete-profile' || !isNewUser) {

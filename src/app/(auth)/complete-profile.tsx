@@ -11,6 +11,8 @@ import { useAuthStore } from '@/store/authStore';
 
 export default function CompleteProfileScreen() {
   const completeProfile = useAuthStore((state) => state.completeProfile);
+  const postLoginRoute = useAuthStore((state) => state.postLoginRoute);
+  const setPostLoginRoute = useAuthStore((state) => state.setPostLoginRoute);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const scheme = useColorScheme();
@@ -22,7 +24,9 @@ export default function CompleteProfileScreen() {
     setErrorMessage('');
     try {
       await completeProfile();
-      router.replace('/(tabs)');
+      const destination = postLoginRoute ?? '/(tabs)';
+      setPostLoginRoute(null);
+      router.replace(destination);
     } catch (error) {
       setErrorMessage(getAuthErrorMessage(error, strings.auth.unexpectedError));
     } finally {

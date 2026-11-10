@@ -10,5 +10,5 @@ export default function IndexRoute() {
   if (status === 'authenticated') {
     return <Redirect href={isNewUser ? '/(auth)/complete-profile' : '/(tabs)'} />;
   }
-  return <Redirect href="/(auth)/login" />;
+  return <Redirect href="/(tabs)" />;
 }

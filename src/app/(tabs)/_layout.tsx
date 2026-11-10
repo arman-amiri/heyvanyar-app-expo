@@ -19,28 +19,15 @@ export default function TabsLayout() {
           backgroundColor: colors.background,
           borderTopColor: colors.backgroundElement,
         },
-        tabBarLabelStyle: { fontSize: 11 },
+        tabBarLabelStyle: { fontSize: 12, lineHeight: 20 },
       }}>
       <Tabs.Screen
-        name="index"
+        name="profile"
         options={{
-          title: strings.tabs.home,
+          title: strings.tabs.profile,
           tabBarIcon: ({ color, size }) => (
             <SymbolView
-              name={{ ios: 'house.fill', android: 'home', web: 'home' }}
-              size={size}
-              tintColor={color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="categories"
-        options={{
-          title: strings.tabs.categories,
-          tabBarIcon: ({ color, size }) => (
-            <SymbolView
-              name={{ ios: 'square.grid.2x2.fill', android: 'category', web: 'category' }}
+              name={{ ios: 'person.fill', android: 'person', web: 'person' }}
               size={size}
               tintColor={color}
             />
@@ -61,12 +48,25 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="categories"
         options={{
-          title: strings.tabs.profile,
+          title: strings.tabs.categories,
           tabBarIcon: ({ color, size }) => (
             <SymbolView
-              name={{ ios: 'person.fill', android: 'person', web: 'person' }}
+              name={{ ios: 'square.grid.2x2.fill', android: 'category', web: 'category' }}
+              size={size}
+              tintColor={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: strings.tabs.home,
+          tabBarIcon: ({ color, size }) => (
+            <SymbolView
+              name={{ ios: 'house.fill', android: 'home', web: 'home' }}
               size={size}
               tintColor={color}
             />

@@ -20,6 +20,8 @@ export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 interface AuthState {
   status: AuthStatus;
   isNewUser: boolean;
+  postLoginRoute: '/(tabs)/profile' | null;
+  setPostLoginRoute: (route: '/(tabs)/profile' | null) => void;
   login: (tokens: AuthTokens, isNewUser?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
@@ -55,13 +57,15 @@ async function writeAuthSession(session: AuthSession): Promise<void> {
 export const useAuthStore = create<AuthState>((set) => ({
   status: 'loading',
   isNewUser: false,
+  postLoginRoute: null,
+  setPostLoginRoute: (postLoginRoute) => set({ postLoginRoute }),
   login: async (tokens, isNewUser = false) => {
     await writeAuthSession({ tokens, isNewUser });
     set({ status: 'authenticated', isNewUser });
   },
   logout: async () => {
     if (Platform.OS !== 'web') await SecureStore.deleteItemAsync(SESSION_KEY);
-    set({ status: 'unauthenticated', isNewUser: false });
+    set({ status: 'unauthenticated', isNewUser: false, postLoginRoute: null });
   },
   hydrate: async () => {
     set({ status: 'loading' });
