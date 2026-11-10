@@ -6,12 +6,12 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { strings } from '@/constants/strings';
+import { AppText as Text } from '@/components/app-text';
 import { Colors, Spacing } from '@/constants/theme';
 import { getAds, type Ad } from '@/features/ads/api';
 import { useColorScheme } from '@/hooks/use-color-scheme';

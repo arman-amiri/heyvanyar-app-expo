@@ -7,6 +7,8 @@ export const strings = {
     continue: 'ادامه',
     loading: 'در حال بارگذاری',
     retry: 'تلاش دوباره',
+    backToHome: 'بازگشت به صفحهٔ اصلی',
+    fontLoadError: 'بارگذاری فونت برنامه با مشکل روبه‌رو شد.',
   },
   auth: {
     loginTitle: 'ورود یا ثبت‌نام',

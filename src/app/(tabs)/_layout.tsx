@@ -1,13 +1,18 @@
 import { Tabs } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { useColorScheme } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { strings } from '@/constants/strings';
-import { Colors } from '@/constants/theme';
+import { Colors, FontFamilies } from '@/constants/theme';
 
 export default function TabsLayout() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const insets = useSafeAreaInsets();
+
+  // تشخیص حالت ناوبری سه‌دکمه‌ای در اندروید
+  const isButtonNavModeAndroid = Platform.OS === 'android' && insets.bottom >= 24;
 
   return (
     <Tabs
@@ -18,8 +23,17 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.background,
           borderTopColor: colors.backgroundElement,
+          height: 76 + insets.bottom + (isButtonNavModeAndroid ? 8 : 0),
+          paddingBottom: insets.bottom + (isButtonNavModeAndroid ? 8 : 0),
+          paddingTop: 6,
         },
-        tabBarLabelStyle: { fontSize: 12, lineHeight: 20 },
+        tabBarItemStyle: { paddingVertical: 4 },
+        tabBarLabelStyle: {
+          fontSize: 14,
+          fontFamily: FontFamilies.regular,
+          includeFontPadding: true,
+          lineHeight: 28,
+        },
       }}>
       <Tabs.Screen
         name="profile"

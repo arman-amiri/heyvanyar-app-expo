@@ -1,6 +1,6 @@
 import { StyleSheet, TextInput } from 'react-native';
 
-import { Colors, Spacing } from '@/constants/theme';
+import { Colors, FontFamilies, Spacing } from '@/constants/theme';
 import { normalizeDigits } from '@/features/auth/api';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -51,6 +51,7 @@ const styles = StyleSheet.create({
   input: {
     borderRadius: 12,
     fontSize: 26,
+    fontFamily: FontFamilies.bold,
     fontWeight: '700',
     letterSpacing: Spacing.three,
     minHeight: 64,

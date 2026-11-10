@@ -1,6 +1,7 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 
-import { Colors, Spacing } from '@/constants/theme';
+import { AppText as Text } from '@/components/app-text';
+import { Colors, FontFamilies, Spacing } from '@/constants/theme';
 import { normalizeDigits } from '@/features/auth/api';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -62,6 +63,7 @@ const styles = StyleSheet.create({
   input: {
     borderRadius: 12,
     fontSize: 18,
+    fontFamily: FontFamilies.regular,
     minHeight: 54,
     paddingHorizontal: Spacing.three,
     writingDirection: 'ltr',

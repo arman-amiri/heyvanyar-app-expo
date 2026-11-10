@@ -6,19 +6,21 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
+import { SymbolView } from 'expo-symbols';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
 import { strings } from '@/constants/strings';
+import { AppText as Text } from '@/components/app-text';
 import { Colors, Spacing } from '@/constants/theme';
 import { PhoneInput } from '@/features/auth/components/PhoneInput';
 import { getAuthErrorMessage, normalizePhone } from '@/features/auth/api';
 import { useSendOtp } from '@/features/auth/useSendOtp';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { HttpError } from '@/services/http';
+import { useAuthStore } from '@/store/authStore';
 
 export default function LoginScreen() {
   const [phone, setPhone] = useState('');
@@ -26,6 +28,7 @@ export default function LoginScreen() {
   const [phoneError, setPhoneError] = useState('');
   const submitLock = useRef(false);
   const sendOtpMutation = useSendOtp();
+  const setPostLoginRoute = useAuthStore((state) => state.setPostLoginRoute);
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
@@ -58,6 +61,23 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <View style={styles.header}>
+        <Pressable
+          accessibilityLabel={strings.common.backToHome}
+          accessibilityRole="button"
+          hitSlop={8}
+          onPress={() => {
+            setPostLoginRoute(null);
+            router.replace('/(tabs)');
+          }}
+          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
+          <SymbolView
+            name={{ ios: 'arrow.left', android: 'arrow_back', web: 'arrow_back' }}
+            size={24}
+            tintColor={colors.text}
+          />
+        </Pressable>
+      </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}>
@@ -122,6 +142,18 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   safeArea: { flex: 1 },
+  header: {
+    alignItems: 'flex-start',
+    height: 48,
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.four,
+  },
+  backButton: {
+    alignItems: 'center',
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',

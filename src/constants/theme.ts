@@ -26,6 +26,13 @@ export const Colors = {
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
+export const FontFamilies = {
+  regular: 'IRANSans',
+  light: 'IRANSansLight',
+  medium: 'IRANSansMedium',
+  bold: 'IRANSansBold',
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */

@@ -6,13 +6,13 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { strings } from '@/constants/strings';
+import { AppText as Text } from '@/components/app-text';
 import { Colors, Spacing } from '@/constants/theme';
 import { OtpInput } from '@/features/auth/components/OtpInput';
 import { getAuthErrorMessage, HttpError } from '@/features/auth/api';
