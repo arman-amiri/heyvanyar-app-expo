@@ -6,16 +6,16 @@ import { strings } from '@/constants/strings';
 import { Colors, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export default function CategoriesScreen() {
+export default function ChatScreen() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
-        <Text style={[styles.title, { color: colors.text }]}>{strings.tabs.categoriesTitle}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{strings.tabs.chatTitle}</Text>
         <Text style={[styles.description, { color: colors.textSecondary }]}>
-          {strings.tabs.categoriesDescription}
+          {strings.tabs.chatDescription}
         </Text>
       </View>
     </SafeAreaView>

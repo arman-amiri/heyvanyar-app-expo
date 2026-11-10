@@ -1,10 +1,5 @@
 import { z } from 'zod';
 
-export const authTokensSchema = z
-  .object({
-    accessToken: z.string().min(1),
-    refreshToken: z.string().min(1),
-  })
-  .strict();
+export const accessTokenSchema = z.string().min(1);
 
-export type AuthTokens = z.infer<typeof authTokensSchema>;
+export type AccessToken = z.infer<typeof accessTokenSchema>;

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import { strings } from '@/constants/strings';
 import { AppText as Text } from '@/components/app-text';
@@ -20,15 +20,15 @@ import { getAuthErrorMessage, normalizePhone } from '@/features/auth/api';
 import { useSendOtp } from '@/features/auth/useSendOtp';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { HttpError } from '@/services/http';
-import { useAuthStore } from '@/store/authStore';
 
 export default function LoginScreen() {
+  const { returnTo: rawReturnTo } = useLocalSearchParams<{ returnTo?: string }>();
+  const returnToAds = rawReturnTo === 'ads';
   const [phone, setPhone] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const submitLock = useRef(false);
   const sendOtpMutation = useSendOtp();
-  const setPostLoginRoute = useAuthStore((state) => state.setPostLoginRoute);
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
@@ -45,7 +45,13 @@ export default function LoginScreen() {
     setErrorMessage('');
     try {
       await sendOtpMutation.mutateAsync(normalizedPhone);
-      router.push({ pathname: '/(auth)/verify', params: { phone: normalizedPhone } });
+      router.push({
+        pathname: '/(auth)/verify',
+        params: {
+          phone: normalizedPhone,
+          ...(returnToAds ? { returnTo: 'ads' } : {}),
+        },
+      });
     } catch (error) {
       const retryAfter = error instanceof HttpError ? error.retryAfter : undefined;
       setErrorMessage(
@@ -66,10 +72,7 @@ export default function LoginScreen() {
           accessibilityLabel={strings.common.backToHome}
           accessibilityRole="button"
           hitSlop={8}
-          onPress={() => {
-            setPostLoginRoute(null);
-            router.replace('/(tabs)');
-          }}
+          onPress={() => router.replace('/(tabs)')}
           style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
           <SymbolView
             name={{ ios: 'arrow.left', android: 'arrow_back', web: 'arrow_back' }}

@@ -23,8 +23,12 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/store/authStore';
 
 export default function VerifyScreen() {
-  const { phone: rawPhone } = useLocalSearchParams<{ phone?: string }>();
+  const { phone: rawPhone, returnTo: rawReturnTo } = useLocalSearchParams<{
+    phone?: string;
+    returnTo?: string;
+  }>();
   const phone = typeof rawPhone === 'string' ? rawPhone : '';
+  const returnToAds = rawReturnTo === 'ads';
   const [code, setCode] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const submitLock = useRef(false);
@@ -43,10 +47,7 @@ export default function VerifyScreen() {
       setErrorMessage('');
       try {
         const result = await verifyOtpMutation.mutateAsync({ phone, code: value });
-        await login(
-          { accessToken: result.accessToken, refreshToken: result.refreshToken },
-          result.isNewUser,
-        );
+        await login(result.accessToken, returnToAds ? '/(tabs)/ads' : undefined);
       } catch (error) {
         if (error instanceof HttpError && (error.status === 400 || error.status === 401)) {
           setCode('');
@@ -58,7 +59,7 @@ export default function VerifyScreen() {
         submitLock.current = false;
       }
     },
-    [login, phone, verifyOtpMutation],
+    [login, phone, returnToAds, verifyOtpMutation],
   );
 
   const handleResend = async () => {
@@ -93,7 +94,12 @@ export default function VerifyScreen() {
             <Pressable
               accessibilityLabel={strings.auth.editPhone}
               accessibilityRole="button"
-              onPress={() => router.replace('/(auth)/login')}
+              onPress={() =>
+                router.replace({
+                  pathname: '/(auth)/login',
+                  ...(returnToAds ? { params: { returnTo: 'ads' } } : {}),
+                })
+              }
               style={({ pressed }) => pressed && styles.pressed}>
               <Text style={[styles.editPhone, { color: colors.textSecondary }]}>
                 {strings.auth.editPhone}

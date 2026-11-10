@@ -49,6 +49,23 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="chat"
+        options={{
+          title: strings.tabs.chat,
+          tabBarIcon: ({ color, size }) => (
+            <SymbolView
+              name={{
+                ios: 'bubble.left.and.bubble.right.fill',
+                android: 'chat',
+                web: 'chat',
+              }}
+              size={size}
+              tintColor={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="ads"
         options={{
           title: strings.tabs.ads,
@@ -61,19 +78,7 @@ export default function TabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="categories"
-        options={{
-          title: strings.tabs.categories,
-          tabBarIcon: ({ color, size }) => (
-            <SymbolView
-              name={{ ios: 'square.grid.2x2.fill', android: 'category', web: 'category' }}
-              size={size}
-              tintColor={color}
-            />
-          ),
-        }}
-      />
+      <Tabs.Screen name="ad-stage-two" options={{ href: null }} />
       <Tabs.Screen
         name="index"
         options={{

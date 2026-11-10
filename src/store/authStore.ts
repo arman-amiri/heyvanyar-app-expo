@@ -4,37 +4,40 @@ import { create } from 'zustand';
 import { z } from 'zod';
 
 import { strings } from '@/constants/strings';
-import { authTokensSchema, type AuthTokens } from '@/features/auth/types';
+import { accessTokenSchema } from '@/features/auth/types';
 
 const SESSION_KEY = 'auth-session';
 
-const authSessionSchema = z
-  .object({
-    tokens: authTokensSchema,
-    isNewUser: z.boolean(),
-  })
-  .strict();
+const authSessionSchema = z.union([
+  z.object({ accessToken: accessTokenSchema }).strict(),
+  z
+    .object({
+      tokens: z.object({ accessToken: accessTokenSchema }).passthrough(),
+      isNewUser: z.boolean(),
+    })
+    .passthrough()
+    .transform(({ tokens }) => ({ accessToken: tokens.accessToken })),
+]);
 
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
+export type AuthSession = z.infer<typeof authSessionSchema>;
 
 interface AuthState {
   status: AuthStatus;
-  isNewUser: boolean;
-  postLoginRoute: '/(tabs)/profile' | null;
-  setPostLoginRoute: (route: '/(tabs)/profile' | null) => void;
-  login: (tokens: AuthTokens, isNewUser?: boolean) => Promise<void>;
+  postLoginRoute: '/(tabs)/ads' | null;
+  login: (accessToken: string, postLoginRoute?: '/(tabs)/ads') => Promise<void>;
+  clearPostLoginRoute: () => void;
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
-  updateTokens: (tokens: AuthTokens) => Promise<void>;
-  completeProfile: () => Promise<void>;
 }
 
-export type AuthSession = z.infer<typeof authSessionSchema>;
-
 export async function readAuthSession(): Promise<AuthSession | null> {
-  if (Platform.OS === 'web') return null;
-
-  const value = await SecureStore.getItemAsync(SESSION_KEY);
+  const value =
+    Platform.OS === 'web'
+      ? typeof window === 'undefined'
+        ? null
+        : window.sessionStorage.getItem(SESSION_KEY)
+      : await SecureStore.getItemAsync(SESSION_KEY);
   if (value === null) return null;
 
   let sessionValue: unknown;
@@ -50,45 +53,43 @@ export async function readAuthSession(): Promise<AuthSession | null> {
 }
 
 async function writeAuthSession(session: AuthSession): Promise<void> {
-  if (Platform.OS === 'web') throw new Error(strings.auth.secureStoreUnavailable);
-  await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(session));
+  const value = JSON.stringify(session);
+  if (Platform.OS === 'web') {
+    if (typeof window === 'undefined') throw new Error(strings.auth.browserStorageUnavailable);
+    window.sessionStorage.setItem(SESSION_KEY, value);
+    return;
+  }
+  await SecureStore.setItemAsync(SESSION_KEY, value);
+}
+
+async function deleteAuthSession(): Promise<void> {
+  if (Platform.OS === 'web') {
+    if (typeof window !== 'undefined') window.sessionStorage.removeItem(SESSION_KEY);
+    return;
+  }
+  await SecureStore.deleteItemAsync(SESSION_KEY);
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   status: 'loading',
-  isNewUser: false,
   postLoginRoute: null,
-  setPostLoginRoute: (postLoginRoute) => set({ postLoginRoute }),
-  login: async (tokens, isNewUser = false) => {
-    await writeAuthSession({ tokens, isNewUser });
-    set({ status: 'authenticated', isNewUser });
+  login: async (accessToken, postLoginRoute = undefined) => {
+    await writeAuthSession({ accessToken });
+    set({ status: 'authenticated', postLoginRoute: postLoginRoute ?? null });
   },
   logout: async () => {
-    if (Platform.OS !== 'web') await SecureStore.deleteItemAsync(SESSION_KEY);
-    set({ status: 'unauthenticated', isNewUser: false, postLoginRoute: null });
+    await deleteAuthSession();
+    set({ status: 'unauthenticated', postLoginRoute: null });
   },
+  clearPostLoginRoute: () => set({ postLoginRoute: null }),
   hydrate: async () => {
     set({ status: 'loading' });
     try {
       const session = await readAuthSession();
-      set({
-        status: session ? 'authenticated' : 'unauthenticated',
-        isNewUser: session?.isNewUser ?? false,
-      });
+      set({ status: session ? 'authenticated' : 'unauthenticated', postLoginRoute: null });
     } catch (error) {
-      set({ status: 'unauthenticated', isNewUser: false });
+      set({ status: 'unauthenticated', postLoginRoute: null });
       throw error;
     }
-  },
-  updateTokens: async (tokens) => {
-    const session = await readAuthSession();
-    if (!session) throw new Error(strings.auth.sessionExpired);
-    await writeAuthSession({ ...session, tokens });
-  },
-  completeProfile: async () => {
-    const session = await readAuthSession();
-    if (!session) throw new Error(strings.auth.sessionExpired);
-    await writeAuthSession({ ...session, isNewUser: false });
-    set({ isNewUser: false });
   },
 }));

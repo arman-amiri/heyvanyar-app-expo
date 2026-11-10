@@ -3,30 +3,46 @@ import { z } from 'zod';
 import { strings } from '@/constants/strings';
 import { http, HttpError } from '@/services/http';
 
-import { authTokensSchema, type AuthTokens } from './types';
+import { accessTokenSchema, type AccessToken } from './types';
 
 const phoneSchema = z.string().regex(/^09\d{9}$/);
 
 const sendOtpResponseSchema = z
   .object({
-    success: z.literal(true),
-    expiresIn: z.number().int().positive(),
+    statusCode: z.number().int().positive(),
+    message: z.string(),
+    data: z
+      .object({ code: z.string().optional() })
+      .passthrough()
+      .nullable()
+      .optional(),
   })
-  .strict();
+  .passthrough();
 
-const verifyOtpResponseSchema = authTokensSchema
-  .extend({
-    isNewUser: z.boolean(),
+const verifyOtpResponseSchema = z
+  .object({
+    statusCode: z.number().int().positive(),
+    message: z.string(),
+    data: z
+      .object({
+        accessToken: accessTokenSchema,
+        user: z
+          .object({
+            id: z.number().int(),
+            mobile: z.string(),
+            name: z.string(),
+            family: z.string(),
+            status: z.string(),
+            roles: z.array(z.string()),
+          })
+          .passthrough(),
+      })
+      .passthrough(),
   })
-  .strict();
+  .passthrough();
 
-export interface SendOtpResponse {
-  success: true;
-  expiresIn: number;
-}
-
-export interface VerifyOtpResponse extends AuthTokens {
-  isNewUser: boolean;
+export interface VerifyOtpResponse {
+  accessToken: AccessToken;
 }
 
 export function normalizeDigits(value: string): string {
@@ -39,7 +55,7 @@ export function normalizePhone(value: string): string {
   return normalizeDigits(value);
 }
 
-export async function sendOtp(phone: string): Promise<SendOtpResponse> {
+export async function sendOtp(phone: string): Promise<void> {
   const normalizedPhone = normalizePhone(phone);
   if (!phoneSchema.safeParse(normalizedPhone).success) {
     throw new Error(strings.auth.phoneInvalid);
@@ -51,9 +67,9 @@ export async function sendOtp(phone: string): Promise<SendOtpResponse> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ mobile: normalizedPhone }),
   });
-  const parsed = sendOtpResponseSchema.safeParse(response);
-  if (!parsed.success) throw new Error(strings.auth.invalidResponse);
-  return parsed.data;
+  if (!sendOtpResponseSchema.safeParse(response).success) {
+    throw new Error(strings.auth.invalidResponse);
+  }
 }
 
 export async function verifyOtp(phone: string, code: string): Promise<VerifyOtpResponse> {
@@ -66,15 +82,19 @@ export async function verifyOtp(phone: string, code: string): Promise<VerifyOtpR
     throw new Error(strings.auth.codeInvalid);
   }
 
-  const response = await http.request('/auth/verify-otp', {
+  const response = await http.request('/auth/verify', {
     method: 'POST',
     auth: false,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phone: normalizedPhone, code: normalizedCode }),
+    body: JSON.stringify({ mobile: normalizedPhone, code: normalizedCode }),
   });
   const parsed = verifyOtpResponseSchema.safeParse(response);
   if (!parsed.success) throw new Error(strings.auth.invalidResponse);
-  return parsed.data;
+  return { accessToken: parsed.data.data.accessToken };
+}
+
+export async function logoutFromServer(): Promise<void> {
+  await http.request('/auth/logout', { method: 'GET' });
 }
 
 export function getAuthErrorMessage(
@@ -97,4 +117,3 @@ export function getAuthErrorMessage(
 }
 
 export { HttpError } from '@/services/http';
-export { authTokensSchema };
