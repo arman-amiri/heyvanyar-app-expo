@@ -11,18 +11,22 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { SymbolView } from 'expo-symbols';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText as Text } from '@/components/app-text';
 import { strings } from '@/constants/strings';
 import { Colors, Spacing } from '@/constants/theme';
 import { useAdDraftStore, type DraftPhoto, type DraftVideo } from '@/features/ads/draftStore';
+import { AdVideoPreview } from '@/features/ads/AdVideoPreview';
 import {
   createMediaKey,
   deleteStoredMedia,
   savePickedMedia,
 } from '@/features/ads/mediaStorage';
 import { uploadAdImage, uploadAdVideo } from '@/features/ads/uploadApi';
+import { CategoryPickerModal } from '@/features/ads/CategoryPickerModal';
+import type { Category } from '@/features/ads/categoryApi';
 import { getAuthErrorMessage } from '@/features/auth/api';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/store/authStore';
@@ -32,6 +36,7 @@ export default function AdsScreen() {
   const draftStatus = useAdDraftStore((state) => state.status);
   const photos = useAdDraftStore((state) => state.photos);
   const video = useAdDraftStore((state) => state.video);
+  const category = useAdDraftStore((state) => state.category);
   const hydrate = useAdDraftStore((state) => state.hydrate);
   const addPhoto = useAdDraftStore((state) => state.addPhoto);
   const updatePhoto = useAdDraftStore((state) => state.updatePhoto);
@@ -39,8 +44,10 @@ export default function AdsScreen() {
   const removePhotoFromDraft = useAdDraftStore((state) => state.removePhoto);
   const setVideo = useAdDraftStore((state) => state.setVideo);
   const clearDraft = useAdDraftStore((state) => state.clearDraft);
+  const setCategory = useAdDraftStore((state) => state.setCategory);
   const [errorMessage, setErrorMessage] = useState('');
   const [isPicking, setIsPicking] = useState(false);
+  const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState(false);
   const uploadControllers = useRef(new Map<string, AbortController>());
   const pickerLock = useRef(false);
   const scheme = useColorScheme();
@@ -312,6 +319,17 @@ export default function AdsScreen() {
       .catch(setUploadError);
   };
 
+  const handleSelectCategory = (selectedCategory: Category) => {
+    setErrorMessage('');
+    void setCategory({
+      categoryId: selectedCategory.id,
+      title: selectedCategory.title,
+    }).catch(
+      (error: unknown) =>
+        setErrorMessage(getAuthErrorMessage(error, strings.tabs.categorySaveError)),
+    );
+  };
+
   const hasPendingUpload =
     photos.some((photo) => photo.status === 'uploading') || video?.status === 'uploading';
 
@@ -351,13 +369,54 @@ export default function AdsScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={[styles.title, { color: colors.text }]}>{strings.tabs.createAdTitle}</Text>
+        <View style={styles.titleRow}>
+          <Text style={[styles.title, { color: colors.text }]}>{strings.tabs.createAdTitle}</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => void handleCancel()}
+            style={({ pressed }) => [
+              styles.headerCancelButton,
+              { borderColor: colors.backgroundSelected },
+              pressed ? styles.pressed : null,
+            ]}>
+            <Text style={[styles.headerCancelText, { color: colors.text }]}>
+              {strings.tabs.cancelAdCreation}
+            </Text>
+          </Pressable>
+        </View>
         <Text style={[styles.description, { color: colors.textSecondary }]}>
           {strings.tabs.createAdDescription}
         </Text>
 
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, styles.categoryTitle, { color: colors.text }]}>
+            {strings.tabs.selectCategory}
+          </Text>
+          <Pressable
+            accessibilityLabel={category?.title ?? strings.tabs.selectCategory}
+            accessibilityRole="button"
+            onPress={() => setIsCategoryPickerVisible(true)}
+            style={[
+              styles.categoryInput,
+              { backgroundColor: colors.backgroundElement, borderColor: colors.backgroundSelected },
+            ]}>
+            <Text
+              style={[
+                styles.categoryInputText,
+                { color: category ? colors.text : colors.textSecondary },
+              ]}>
+              {category?.title ?? strings.tabs.selectCategory}
+            </Text>
+            <SymbolView
+              name={{ ios: 'chevron.down', android: 'arrow_drop_down', web: 'arrow_drop_down' }}
+              size={20}
+              tintColor={colors.textSecondary}
+            />
+          </Pressable>
+        </View>
+
+        <View style={styles.section}>
+          <View style={[styles.sectionHeader, styles.photoSectionHeader]}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
               {strings.tabs.photosTitle}
             </Text>
@@ -407,7 +466,11 @@ export default function AdsScreen() {
                   hitSlop={6}
                   onPress={() => void handleRemovePhoto(photo)}
                   style={styles.removeButton}>
-                  <Text style={styles.removeButtonText}>×</Text>
+                  <SymbolView
+                    name={{ ios: 'xmark', android: 'close', web: 'close' }}
+                    size={14}
+                    tintColor="#b3261e"
+                  />
                 </Pressable>
                 {index === 0 ? (
                   <Text numberOfLines={1} style={[styles.primaryLabel, { color: colors.text }]}>
@@ -432,14 +495,18 @@ export default function AdsScreen() {
                 disabled={isPicking}
                 onPress={() => void handleAddPhoto()}
                 style={[
-                  styles.addPhotoButton,
+                  styles.mediaPickerButton,
                   { borderColor: colors.textSecondary },
                   isPicking ? styles.disabled : null,
                 ]}>
                 {isPicking ? (
                   <ActivityIndicator size="small" color={colors.textSecondary} />
                 ) : (
-                  <Text style={[styles.addPhotoPlus, { color: colors.textSecondary }]}>+</Text>
+                  <SymbolView
+                    name={{ ios: 'photo', android: 'image', web: 'image' }}
+                    size={28}
+                    tintColor={colors.textSecondary}
+                  />
                 )}
               </Pressable>
             ) : null}
@@ -450,53 +517,66 @@ export default function AdsScreen() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {strings.tabs.videoTitle}
           </Text>
-          {video ? (
-            <View style={[styles.videoCard, { backgroundColor: colors.backgroundElement }]}>
-              <View style={styles.videoInfo}>
-                <Text numberOfLines={1} style={[styles.videoName, { color: colors.text }]}>
-                  {video.fileName}
-                </Text>
-                {video.status === 'uploading' ? (
-                  <View style={styles.uploadingRow}>
-                    <ActivityIndicator size="small" color={colors.textSecondary} />
-                    <Text style={[styles.videoStatus, { color: colors.textSecondary }]}>
-                      {strings.tabs.uploadingMedia}
-                    </Text>
-                  </View>
-                ) : video.status === 'failed' ? (
-                  <Pressable accessibilityRole="button" onPress={handleRetryVideo}>
-                    <Text style={[styles.retryLabel, { color: colors.textSecondary }]}>
-                      {strings.tabs.retryUpload}
-                    </Text>
-                  </Pressable>
-                ) : null}
-              </View>
-              <Pressable
-                accessibilityLabel={strings.tabs.removeMedia}
-                accessibilityRole="button"
-                hitSlop={8}
-                onPress={() => void handleRemoveVideo()}>
-                <Text style={[styles.removeVideoText, { color: colors.textSecondary }]}>×</Text>
-              </Pressable>
-            </View>
-          ) : (
+          {!video ? (
             <Text style={[styles.helper, { color: colors.textSecondary }]}>
               {strings.tabs.noVideoSelected}
             </Text>
-          )}
-          <Pressable
-            accessibilityRole="button"
-            disabled={isPicking}
-            onPress={() => void handleChooseVideo()}
-            style={[
-              styles.videoButton,
-              { borderColor: colors.backgroundSelected },
-              isPicking ? styles.disabled : null,
-            ]}>
-            <Text style={[styles.videoButtonText, { color: colors.text }]}>
-              {video ? strings.tabs.replaceVideo : strings.tabs.chooseVideo}
-            </Text>
-          </Pressable>
+          ) : null}
+          <View style={styles.videoPickerRow}>
+            <Pressable
+              accessibilityLabel={video ? strings.tabs.replaceVideo : strings.tabs.chooseVideo}
+              accessibilityRole="button"
+              disabled={isPicking}
+              onPress={() => void handleChooseVideo()}
+              style={[
+                styles.mediaPickerButton,
+                { borderColor: colors.textSecondary },
+                isPicking ? styles.disabled : null,
+              ]}>
+              {isPicking ? (
+                <ActivityIndicator size="small" color={colors.textSecondary} />
+              ) : (
+                <SymbolView
+                  name={{ ios: 'video', android: 'videocam', web: 'videocam' }}
+                  size={28}
+                  tintColor={colors.textSecondary}
+                />
+              )}
+            </Pressable>
+          </View>
+          {video ? (
+            <>
+              <AdVideoPreview uri={video.previewUri} />
+              <View style={[styles.videoCard, { backgroundColor: colors.backgroundElement }]}>
+                <View style={styles.videoInfo}>
+                  <Text numberOfLines={1} style={[styles.videoName, { color: colors.text }]}>
+                    {video.fileName}
+                  </Text>
+                  {video.status === 'uploading' ? (
+                    <View style={styles.uploadingRow}>
+                      <ActivityIndicator size="small" color={colors.textSecondary} />
+                      <Text style={[styles.videoStatus, { color: colors.textSecondary }]}>
+                        {strings.tabs.uploadingMedia}
+                      </Text>
+                    </View>
+                  ) : video.status === 'failed' ? (
+                    <Pressable accessibilityRole="button" onPress={handleRetryVideo}>
+                      <Text style={[styles.retryLabel, { color: colors.textSecondary }]}>
+                        {strings.tabs.retryUpload}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+                <Pressable
+                  accessibilityLabel={strings.tabs.removeMedia}
+                  accessibilityRole="button"
+                  hitSlop={8}
+                  onPress={() => void handleRemoveVideo()}>
+                  <Text style={[styles.removeVideoText, { color: colors.textSecondary }]}>×</Text>
+                </Pressable>
+              </View>
+            </>
+          ) : null}
         </View>
       </ScrollView>
 
@@ -510,7 +590,7 @@ export default function AdsScreen() {
         <Pressable
           accessibilityRole="button"
           disabled={isPicking}
-          onPress={() => void handleCancel()}
+          onPress={() => router.replace('/(tabs)')}
           style={({ pressed }) => [
             styles.footerButton,
             styles.cancelButton,
@@ -518,24 +598,29 @@ export default function AdsScreen() {
             pressed && !isPicking ? styles.pressed : null,
             isPicking ? styles.disabled : null,
           ]}>
-          <Text style={[styles.cancelText, { color: colors.text }]}>{strings.tabs.cancelAd}</Text>
+          <Text style={[styles.cancelText, { color: colors.text }]}>{strings.tabs.backAd}</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          accessibilityState={{ disabled: hasPendingUpload || isPicking }}
-          disabled={hasPendingUpload || isPicking}
-          onPress={() => router.push('/(tabs)/ad-stage-two')}
+          accessibilityState={{ disabled: hasPendingUpload || isPicking || !category }}
+          disabled={hasPendingUpload || isPicking || !category}
+          onPress={() => router.push('/ad-stage-two')}
           style={({ pressed }) => [
             styles.footerButton,
             { backgroundColor: colors.text },
-            pressed && !hasPendingUpload && !isPicking ? styles.pressed : null,
-            hasPendingUpload || isPicking ? styles.disabled : null,
+            pressed && !hasPendingUpload && !isPicking && category ? styles.pressed : null,
+            hasPendingUpload || isPicking || !category ? styles.disabled : null,
           ]}>
           <Text style={[styles.continueText, { color: colors.background }]}>
             {strings.tabs.continueAd}
           </Text>
         </Pressable>
       </View>
+      <CategoryPickerModal
+        onClose={() => setIsCategoryPickerVisible(false)}
+        onSelect={handleSelectCategory}
+        visible={isCategoryPickerVisible}
+      />
     </SafeAreaView>
   );
 }
@@ -550,23 +635,49 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
   },
   scrollContent: { gap: Spacing.four, padding: Spacing.four, paddingBottom: Spacing.three },
-  title: { fontSize: 26, fontWeight: '700', textAlign: 'right' },
+  titleRow: {
+    alignItems: 'center',
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+  },
+  title: { fontSize: 20, fontWeight: '700', textAlign: 'right' },
+  headerCancelButton: {
+    alignItems: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: 'center',
+    minHeight: 36,
+    paddingHorizontal: Spacing.three,
+  },
+  headerCancelText: { fontSize: 13, fontWeight: '600' },
   description: { fontSize: 15, lineHeight: 25, textAlign: 'right' },
   section: { gap: Spacing.two },
+  categoryTitle: { fontSize: 16 },
+  categoryInput: {
+    alignItems: 'center',
+    borderRadius: 10,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    minHeight: 48,
+    paddingHorizontal: Spacing.three,
+  },
+  categoryInputText: { flex: 1, fontSize: 15, textAlign: 'right' },
   sectionHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
+  photoSectionHeader: { flexDirection: 'row-reverse' },
   sectionTitle: { fontSize: 18, fontWeight: '700', textAlign: 'right' },
   counter: { fontSize: 14 },
   helper: { fontSize: 14, lineHeight: 22, textAlign: 'right' },
   photoList: { alignItems: 'flex-start', flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12 },
-  photoItem: { alignItems: 'center', gap: 3, minHeight: 64, position: 'relative', width: 52 },
+  photoItem: { alignItems: 'center', gap: 3, minHeight: 104, position: 'relative', width: 92 },
   photoButton: {
     borderRadius: 4,
-    height: 40,
+    height: 80,
     overflow: 'hidden',
-    width: 40,
+    width: 80,
   },
   primaryPhoto: { borderColor: '#208AEF', borderWidth: 2 },
-  thumbnail: { height: 40, width: 40 },
+  thumbnail: { height: 80, width: 80 },
   uploadOverlay: {
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.28)',
@@ -580,28 +691,28 @@ const styles = StyleSheet.create({
   failedMark: { color: '#ffffff', fontSize: 20, fontWeight: '700' },
   removeButton: {
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    height: 20,
+    backgroundColor: '#e6e6e6',
+    borderRadius: 12,
+    height: 24,
     justifyContent: 'center',
     position: 'absolute',
-    right: 0,
-    top: -6,
-    width: 20,
+    right: 4,
+    top: -8,
+    width: 24,
   },
-  removeButtonText: { color: '#b3261e', fontSize: 19, lineHeight: 20 },
-  primaryLabel: { fontSize: 9, maxWidth: 52, textAlign: 'center' },
+  primaryLabel: { fontSize: 9, maxWidth: 92, textAlign: 'center' },
   retryLabel: { fontSize: 10, textAlign: 'center', textDecorationLine: 'underline' },
-  addPhotoButton: {
+  mediaPickerButton: {
     alignItems: 'center',
     borderRadius: 4,
     borderStyle: 'dashed',
     borderWidth: 1,
-    height: 40,
+    height: 80,
     justifyContent: 'center',
-    width: 40,
+    paddingHorizontal: 2,
+    width: 80,
   },
-  addPhotoPlus: { fontSize: 26, lineHeight: 30 },
+  videoPickerRow: { flexDirection: 'row-reverse' },
   videoCard: {
     alignItems: 'center',
     borderRadius: 10,
@@ -616,19 +727,12 @@ const styles = StyleSheet.create({
   videoStatus: { fontSize: 12 },
   uploadingRow: { alignItems: 'center', flexDirection: 'row', gap: Spacing.one },
   removeVideoText: { fontSize: 24 },
-  videoButton: {
-    alignItems: 'center',
-    borderRadius: 10,
-    borderWidth: 1,
-    justifyContent: 'center',
-    minHeight: 46,
-  },
-  videoButtonText: { fontSize: 15, fontWeight: '600' },
   footer: {
     borderTopColor: '#e5e5e5',
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: Spacing.two,
+    paddingBottom: 8,
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
   },

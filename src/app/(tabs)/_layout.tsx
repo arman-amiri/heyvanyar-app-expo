@@ -69,6 +69,7 @@ export default function TabsLayout() {
         name="ads"
         options={{
           title: strings.tabs.ads,
+          tabBarStyle: { display: 'none' },
           tabBarIcon: ({ color, size }) => (
             <SymbolView
               name={{ ios: 'plus.app.fill', android: 'add_box', web: 'add_box' }}
@@ -78,7 +79,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen name="ad-stage-two" options={{ href: null }} />
       <Tabs.Screen
         name="index"
         options={{

@@ -29,6 +29,7 @@ export default function VerifyScreen() {
   }>();
   const phone = typeof rawPhone === 'string' ? rawPhone : '';
   const returnToAds = rawReturnTo === 'ads';
+  const returnToAdStageThree = rawReturnTo === 'ad-stage-three';
   const [code, setCode] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const submitLock = useRef(false);
@@ -47,7 +48,10 @@ export default function VerifyScreen() {
       setErrorMessage('');
       try {
         const result = await verifyOtpMutation.mutateAsync({ phone, code: value });
-        await login(result.accessToken, returnToAds ? '/(tabs)/ads' : undefined);
+        await login(
+          result.accessToken,
+          returnToAds ? '/(tabs)/ads' : returnToAdStageThree ? '/ad-stage-three' : undefined,
+        );
       } catch (error) {
         if (error instanceof HttpError && (error.status === 400 || error.status === 401)) {
           setCode('');
@@ -59,7 +63,7 @@ export default function VerifyScreen() {
         submitLock.current = false;
       }
     },
-    [login, phone, returnToAds, verifyOtpMutation],
+    [login, phone, returnToAds, returnToAdStageThree, verifyOtpMutation],
   );
 
   const handleResend = async () => {
@@ -97,7 +101,9 @@ export default function VerifyScreen() {
               onPress={() =>
                 router.replace({
                   pathname: '/(auth)/login',
-                  ...(returnToAds ? { params: { returnTo: 'ads' } } : {}),
+                  ...((returnToAds || returnToAdStageThree)
+                    ? { params: { returnTo: returnToAds ? 'ads' : 'ad-stage-three' } }
+                    : {}),
                 })
               }
               style={({ pressed }) => pressed && styles.pressed}>

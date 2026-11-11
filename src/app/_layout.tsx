@@ -104,13 +104,20 @@ function AuthNavigation() {
   }, [clearPostLoginRoute, postLoginRoute, rootSegment, status]);
 
   if (status === 'unauthenticated') {
+    if (rootSegment === 'ad-stage-three') {
+      return <Redirect href={{ pathname: '/(auth)/login', params: { returnTo: 'ad-stage-three' } }} />;
+    }
     if (rootSegment !== '(auth)' && rootSegment !== '(tabs)') {
       return <Redirect href="/(tabs)" />;
     }
   } else if (status === 'authenticated') {
     if (rootSegment === '(auth)') {
       return <Redirect href={postLoginRoute ?? '/(tabs)/profile'} />;
-    } else if (rootSegment !== '(tabs)') {
+    } else if (
+      rootSegment !== '(tabs)' &&
+      rootSegment !== 'ad-stage-two' &&
+      rootSegment !== 'ad-stage-three'
+    ) {
       return <Redirect href="/(tabs)/profile" />;
     }
   }
@@ -119,6 +126,8 @@ function AuthNavigation() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="ad-stage-two" />
+      <Stack.Screen name="ad-stage-three" />
     </Stack>
   );
 }

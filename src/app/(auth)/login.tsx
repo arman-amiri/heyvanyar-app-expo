@@ -24,6 +24,7 @@ import { HttpError } from '@/services/http';
 export default function LoginScreen() {
   const { returnTo: rawReturnTo } = useLocalSearchParams<{ returnTo?: string }>();
   const returnToAds = rawReturnTo === 'ads';
+  const returnToAdStageThree = rawReturnTo === 'ad-stage-three';
   const [phone, setPhone] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [phoneError, setPhoneError] = useState('');
@@ -50,6 +51,7 @@ export default function LoginScreen() {
         params: {
           phone: normalizedPhone,
           ...(returnToAds ? { returnTo: 'ads' } : {}),
+          ...(returnToAdStageThree ? { returnTo: 'ad-stage-three' } : {}),
         },
       });
     } catch (error) {

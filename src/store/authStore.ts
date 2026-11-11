@@ -21,11 +21,12 @@ const authSessionSchema = z.union([
 
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 export type AuthSession = z.infer<typeof authSessionSchema>;
+export type PostLoginRoute = '/(tabs)/ads' | '/ad-stage-three';
 
 interface AuthState {
   status: AuthStatus;
-  postLoginRoute: '/(tabs)/ads' | null;
-  login: (accessToken: string, postLoginRoute?: '/(tabs)/ads') => Promise<void>;
+  postLoginRoute: PostLoginRoute | null;
+  login: (accessToken: string, postLoginRoute?: PostLoginRoute) => Promise<void>;
   clearPostLoginRoute: () => void;
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
