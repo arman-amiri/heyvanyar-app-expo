@@ -107,6 +107,9 @@ function AuthNavigation() {
     if (rootSegment === 'ad-stage-three') {
       return <Redirect href={{ pathname: '/(auth)/login', params: { returnTo: 'ad-stage-three' } }} />;
     }
+    if (rootSegment === 'my-ads') {
+      return <Redirect href="/(auth)/login" />;
+    }
     if (rootSegment !== '(auth)' && rootSegment !== '(tabs)') {
       return <Redirect href="/(tabs)" />;
     }
@@ -116,7 +119,8 @@ function AuthNavigation() {
     } else if (
       rootSegment !== '(tabs)' &&
       rootSegment !== 'ad-stage-two' &&
-      rootSegment !== 'ad-stage-three'
+      rootSegment !== 'ad-stage-three' &&
+      rootSegment !== 'my-ads'
     ) {
       return <Redirect href="/(tabs)/profile" />;
     }
@@ -128,6 +132,7 @@ function AuthNavigation() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="ad-stage-two" />
       <Stack.Screen name="ad-stage-three" />
+      <Stack.Screen name="my-ads" />
     </Stack>
   );
 }
