@@ -55,7 +55,6 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={[styles.title, { color: colors.text }]}>{strings.tabs.profile}</Text>
         <View style={styles.profileSummary}>
           <View style={[styles.avatar, { backgroundColor: colors.backgroundElement }]}>
             <SymbolView
@@ -180,7 +179,6 @@ function ProfileMenuItem({
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { flexGrow: 1, gap: Spacing.three, padding: Spacing.four },
-  title: { fontSize: 26, fontWeight: '700', textAlign: 'right' },
   profileSummary: { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.two },
   avatar: {
     alignItems: 'center',
@@ -189,7 +187,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 96,
   },
-  mobile: { fontSize: 17, fontWeight: '600', textAlign: 'center' },
+  mobile: { fontSize: 14, fontWeight: '500', textAlign: 'center' },
   menu: { gap: Spacing.two, marginTop: Spacing.three },
   menuItem: {
     alignItems: 'center',
@@ -200,7 +198,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   menuLabel: { alignItems: 'center', flexDirection: 'row-reverse', gap: Spacing.two },
-  menuText: { fontSize: 15, fontWeight: '600', textAlign: 'right' },
+  menuText: { fontSize: 12, fontWeight: '500', textAlign: 'right' },
   profileMessage: { alignItems: 'center', gap: Spacing.two },
   description: { fontSize: 16, lineHeight: 26, textAlign: 'right' },
   retryText: { fontSize: 15, fontWeight: '600', textAlign: 'center' },
@@ -213,7 +211,7 @@ const styles = StyleSheet.create({
     minHeight: 52,
     paddingHorizontal: Spacing.three,
   },
-  logoutText: { fontSize: 16, fontWeight: '700' },
+  logoutText: { fontSize: 14, fontWeight: '500' },
   pressed: { opacity: 0.75 },
   disabled: { opacity: 0.6 },
 });

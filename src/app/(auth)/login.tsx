@@ -1,3 +1,5 @@
+import { router, useLocalSearchParams } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -8,15 +10,13 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { SymbolView } from 'expo-symbols';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
 
-import { strings } from '@/constants/strings';
 import { AppText as Text } from '@/components/app-text';
+import { strings } from '@/constants/strings';
 import { Colors, Spacing } from '@/constants/theme';
-import { PhoneInput } from '@/features/auth/components/PhoneInput';
 import { getAuthErrorMessage, normalizePhone } from '@/features/auth/api';
+import { PhoneInput } from '@/features/auth/components/PhoneInput';
 import { useSendOtp } from '@/features/auth/useSendOtp';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { HttpError } from '@/services/http';
@@ -148,16 +148,16 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   safeArea: { flex: 1 },
   header: {
-    alignItems: 'flex-start',
-    height: 48,
+    alignItems: 'center',
+    width: 60,
     justifyContent: 'center',
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.four, // بالا/پایین بیشتر
   },
   backButton: {
     alignItems: 'center',
-    height: 44,
     justifyContent: 'center',
-    width: 44,
+    width: 50,
   },
   scrollContent: {
     flexGrow: 1,
@@ -165,8 +165,8 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
   },
   form: { gap: Spacing.three, width: '100%', alignSelf: 'center', maxWidth: 480 },
-  title: { fontSize: 28, fontWeight: '700', textAlign: 'right' },
-  description: { fontSize: 16, lineHeight: 26, textAlign: 'right' },
+  title: { fontSize: 16, fontWeight: '500', textAlign: 'right' },
+  description: { fontSize: 12, lineHeight: 26, textAlign: 'right', marginBottom: '20px' },
   button: {
     alignItems: 'center',
     borderRadius: 12,
@@ -174,8 +174,8 @@ const styles = StyleSheet.create({
     minHeight: 54,
     paddingHorizontal: Spacing.three,
   },
-  buttonText: { fontSize: 16, fontWeight: '700' },
+  buttonText: { fontSize: 14, fontWeight: '500' },
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.6 },
-  error: { color: Colors.light.error, textAlign: 'right', lineHeight: 22 },
+  error: { fontSize: 12, color: Colors.light.error, textAlign: 'right', lineHeight: 22 },
 });

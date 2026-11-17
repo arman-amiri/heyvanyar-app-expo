@@ -1,3 +1,4 @@
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -8,19 +9,19 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { strings } from '@/constants/strings';
 import { AppText as Text } from '@/components/app-text';
+import { strings } from '@/constants/strings';
 import { Colors, Spacing } from '@/constants/theme';
-import { OtpInput } from '@/features/auth/components/OtpInput';
 import { getAuthErrorMessage, HttpError } from '@/features/auth/api';
+import { OtpInput } from '@/features/auth/components/OtpInput';
 import { useResendTimer } from '@/features/auth/useResendTimer';
 import { useSendOtp } from '@/features/auth/useSendOtp';
 import { useVerifyOtp } from '@/features/auth/useVerifyOtp';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/store/authStore';
+import { SymbolView } from 'expo-symbols';
 
 export default function VerifyScreen() {
   const { phone: rawPhone, returnTo: rawReturnTo } = useLocalSearchParams<{
@@ -88,6 +89,21 @@ export default function VerifyScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+
+      <View style={styles.header}>
+        <Pressable
+          accessibilityLabel={strings.common.backToHome}
+          accessibilityRole="button"
+          hitSlop={8}
+          onPress={() => router.replace('/(auth)/login')}
+          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
+          <SymbolView
+            name={{ ios: 'arrow.left', android: 'arrow_back', web: 'arrow_back' }}
+            size={24}
+            tintColor={colors.text}
+          />
+        </Pressable>
+      </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}>
@@ -95,23 +111,6 @@ export default function VerifyScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled">
           <View style={styles.form}>
-            <Pressable
-              accessibilityLabel={strings.auth.editPhone}
-              accessibilityRole="button"
-              onPress={() =>
-                router.replace({
-                  pathname: '/(auth)/login',
-                  ...((returnToAds || returnToAdStageThree)
-                    ? { params: { returnTo: returnToAds ? 'ads' : 'ad-stage-three' } }
-                    : {}),
-                })
-              }
-              style={({ pressed }) => pressed && styles.pressed}>
-              <Text style={[styles.editPhone, { color: colors.textSecondary }]}>
-                {strings.auth.editPhone}
-              </Text>
-            </Pressable>
-
             <Text style={[styles.title, { color: colors.text }]}>{strings.auth.verifyTitle}</Text>
             <Text style={[styles.description, { color: colors.textSecondary }]}>
               {strings.auth.verifyDescription}
@@ -158,7 +157,22 @@ export default function VerifyScreen() {
                 </Text>
               )}
             </Pressable>
-
+            <Pressable
+              accessibilityLabel={strings.auth.editPhone}
+              accessibilityRole="button"
+              onPress={() =>
+                router.replace({
+                  pathname: '/(auth)/login',
+                  ...((returnToAds || returnToAdStageThree)
+                    ? { params: { returnTo: returnToAds ? 'ads' : 'ad-stage-three' } }
+                    : {}),
+                })
+              }
+              style={({ pressed }) => pressed && styles.pressed}>
+              <Text style={[styles.editPhone, { color: colors.textSecondary }]}>
+                {strings.auth.editPhone}
+              </Text>
+            </Pressable>
             <Pressable
               accessibilityLabel={
                 remainingSeconds > 0 ? strings.auth.resendIn(remainingSeconds) : strings.auth.resendCode
@@ -198,6 +212,18 @@ export default function VerifyScreen() {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    alignItems: 'center',
+    width: 60,
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.four, // بالا/پایین بیشتر
+  },
+  backButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 50,
+  },
   flex: { flex: 1 },
   safeArea: { flex: 1 },
   scrollContent: {
@@ -206,19 +232,20 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
   },
   form: { gap: Spacing.three, width: '100%', alignSelf: 'center', maxWidth: 480 },
-  title: { fontSize: 28, fontWeight: '700', textAlign: 'right' },
-  description: { fontSize: 16, lineHeight: 26, textAlign: 'right' },
-  phone: { fontSize: 18, fontWeight: '600', textAlign: 'right', writingDirection: 'ltr' },
-  editPhone: { fontSize: 15, textAlign: 'right', textDecorationLine: 'underline' },
+  title: { fontSize: 16, fontWeight: '500', textAlign: 'right' },
+  description: { fontSize: 12, lineHeight: 26, textAlign: 'right' },
+  phone: { fontSize: 14, fontWeight: '500', textAlign: 'right', writingDirection: 'ltr' },
+  editPhone: { fontSize: 12, textAlign: 'right', color: Colors.light.primary },
   button: {
     alignItems: 'center',
     borderRadius: 12,
     justifyContent: 'center',
     minHeight: 54,
     paddingHorizontal: Spacing.three,
+
   },
-  buttonText: { fontSize: 16, fontWeight: '700' },
-  resendText: { fontSize: 15, textAlign: 'center' },
+  buttonText: { fontSize: 12, fontWeight: '500' },
+  resendText: { fontSize: 12, textAlign: 'right' },
   resendRow: { alignItems: 'center', flexDirection: 'row', gap: Spacing.two, justifyContent: 'center' },
   pressed: { opacity: 0.75 },
   disabled: { opacity: 0.6 },

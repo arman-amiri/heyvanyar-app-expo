@@ -1,4 +1,4 @@
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, View } from 'react-native';
 
 import { AppText as Text } from '@/components/app-text';
 import { Colors, FontFamilies, Spacing } from '@/constants/theme';
@@ -37,15 +37,17 @@ export function PhoneInput({
         placeholder={placeholder}
         placeholderTextColor={colors.textSecondary}
         returnKeyType="done"
+        underlineColorAndroid="transparent"
         style={[
           styles.input,
           { backgroundColor: colors.backgroundElement, color: colors.text },
           error ? [styles.inputError, { borderColor: colors.error }] : null,
+          Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as any) : null,
         ]}
         textAlign="right"
         value={value}
       />
-      {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
+      {error ? <Text style={[styles.error, { fontSize: 12, color: colors.error }]}>{error}</Text> : null}
     </View>
   );
 }
@@ -56,13 +58,14 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   label: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '500',
     textAlign: 'right',
   },
   input: {
     borderRadius: 12,
-    fontSize: 18,
+    borderWidth: 0,
+    fontSize: 16,
     fontFamily: FontFamilies.regular,
     minHeight: 54,
     paddingHorizontal: Spacing.three,

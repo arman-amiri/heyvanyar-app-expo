@@ -21,7 +21,7 @@ export const strings = {
     sendingCode: 'در حال ارسال کد…',
     verifyTitle: 'تأیید شماره موبایل',
     verifyDescription: 'کد پیامک‌شده به این شماره را وارد کنید:',
-    editPhone: 'ویرایش شماره',
+    editPhone: 'ویرایش شماره موبایل',
     codeLabel: 'کد تأیید پنج‌رقمی',
     verifyCode: 'تأیید و ورود',
     verifyingCode: 'در حال بررسی کد…',

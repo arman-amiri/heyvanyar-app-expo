@@ -1,4 +1,4 @@
-import { StyleSheet, TextInput } from 'react-native';
+import { Platform, StyleSheet, TextInput } from 'react-native';
 
 import { Colors, FontFamilies, Spacing } from '@/constants/theme';
 import { normalizeDigits } from '@/features/auth/api';
@@ -36,9 +36,11 @@ export function OtpInput({
         if (code.length === 5) onComplete(code);
       }}
       selectTextOnFocus
+      underlineColorAndroid="transparent"
       style={[
         styles.input,
         { backgroundColor: colors.backgroundElement, color: colors.text },
+        Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as any) : null,
       ]}
       textAlign="center"
       textContentType="oneTimeCode"
@@ -50,6 +52,7 @@ export function OtpInput({
 const styles = StyleSheet.create({
   input: {
     borderRadius: 12,
+    borderWidth: 0,
     fontSize: 26,
     fontFamily: FontFamilies.bold,
     fontWeight: '700',
