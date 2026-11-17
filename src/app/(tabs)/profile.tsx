@@ -1,9 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useEffect, useState, type ComponentProps } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SymbolView } from 'expo-symbols';
 
 import { AppText as Text } from '@/components/app-text';
 import { strings } from '@/constants/strings';
@@ -116,7 +116,7 @@ export default function ProfileScreen() {
             {logoutError}
           </Text>
         ) : null}
-        <Pressable
+        {/* <Pressable
           accessibilityRole="button"
           accessibilityLabel={strings.tabs.logout}
           accessibilityState={{ disabled: isLoggingOut }}
@@ -134,6 +134,39 @@ export default function ProfileScreen() {
             <Text style={[styles.logoutText, { color: colors.onPrimary }]}>
               {strings.tabs.logout}
             </Text>
+          )}
+        </Pressable> */}
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={strings.tabs.logout}
+          accessibilityState={{ disabled: isLoggingOut }}
+          disabled={isLoggingOut}
+          onPress={() => void handleLogout()}
+          style={({ pressed }) => [
+            styles.logoutButton,
+            { backgroundColor: colors.backgroundElement },
+            pressed && !isLoggingOut ? styles.pressed : null,
+            isLoggingOut ? styles.disabled : null,
+          ]}>
+          <View style={styles.menuLabel}>
+            <SymbolView
+              name={{ ios: 'rectangle.portrait.and.arrow.right', android: 'logout', web: 'logout' }}
+              size={22}
+              tintColor={colors.error}
+            />
+            <Text style={[styles.menuText, { color: colors.error }]}>
+              {strings.tabs.logout}
+            </Text>
+          </View>
+          {isLoggingOut ? (
+            <ActivityIndicator color={colors.error} />
+          ) : (
+            <SymbolView
+              name={{ ios: 'chevron.left', android: 'chevron_left', web: 'chevron_left' }}
+              size={18}
+              tintColor={colors.textSecondary}
+            />
           )}
         </Pressable>
       </ScrollView>
@@ -206,9 +239,10 @@ const styles = StyleSheet.create({
   logoutButton: {
     alignItems: 'center',
     borderRadius: 12,
-    justifyContent: 'center',
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
     marginTop: 'auto',
-    minHeight: 52,
+    minHeight: 58,
     paddingHorizontal: Spacing.three,
   },
   logoutText: { fontSize: 14, fontWeight: '500' },

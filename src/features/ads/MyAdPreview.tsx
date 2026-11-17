@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useVideoPlayer, VideoView } from 'expo-video';
-import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText as Text } from '@/components/app-text';
 import { strings } from '@/constants/strings';
@@ -99,7 +99,7 @@ export default function MyAdPreviewScreen({
           onPress={() => router.back()}
           style={({ pressed }) => [styles.backButton, pressed ? styles.pressed : null]}>
           <SymbolView
-            name={{ ios: 'chevron.right', android: 'arrow_forward', web: 'arrow_forward' }}
+            name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
             size={22}
             tintColor={colors.text}
           />
@@ -158,13 +158,20 @@ export default function MyAdPreviewScreen({
         </View>
 
         <View style={styles.details}>
+          {ad.category ? (
+            <Text style={[styles.category, { color: colors.textSecondary }]}>
+              {ad.category.parent
+                ? `${ad.category.parent.title} / ${ad.category.title}`
+                : ad.category.title}
+            </Text>
+          ) : null}
           <Text style={[styles.title, { color: colors.text }]}>{ad.title}</Text>
           {relativeTime ? (
             <Text style={[styles.publishedAt, { color: colors.textSecondary }]}>
               {strings.tabs.adPublishedAt(relativeTime)}
             </Text>
           ) : null}
-          <Text style={[styles.price, { color: colors.text }]}>
+          <Text style={[styles.price, { color: colors.textSecondary }]}>
             {price} {strings.tabs.priceUnit}
           </Text>
           <Text style={[styles.description, { color: colors.text }]}>{ad.description}</Text>
@@ -341,8 +348,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     minHeight: 52,
   },
-  headerTitle: { fontSize: 18, fontWeight: '700', textAlign: 'right' },
-  backButton: { alignItems: 'center', height: 44, justifyContent: 'center', width: 44 },
+  headerTitle: { fontSize: 16, fontWeight: '500', textAlign: 'right' },
+  backButton: { alignItems: 'center', height: 44, justifyContent: 'center' },
   gallery: { backgroundColor: Colors.light.surfaceMuted, width: '100%' },
   slide: {
     alignItems: 'center',
@@ -369,10 +376,11 @@ const styles = StyleSheet.create({
     minHeight: 50,
     opacity: 0.6,
   },
-  contactButtonText: { fontSize: 15, fontWeight: '600' },
-  title: { fontSize: 18, fontWeight: '700', lineHeight: 27, textAlign: 'right' },
-  publishedAt: { fontSize: 13, textAlign: 'right' },
-  price: { fontSize: 18, fontWeight: '700', textAlign: 'right' },
+  contactButtonText: { fontSize: 16, fontWeight: '500' },
+  category: { fontSize: 10, textAlign: 'right' },
+  title: { fontSize: 16, fontWeight: '500', lineHeight: 27, textAlign: 'right' },
+  publishedAt: { fontSize: 12, textAlign: 'right' },
+  price: { fontSize: 14, fontWeight: '400', textAlign: 'right' },
   description: { fontSize: 15, lineHeight: 27, textAlign: 'right' },
   messageHeader: {
     alignItems: 'center',

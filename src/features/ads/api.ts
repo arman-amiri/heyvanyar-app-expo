@@ -3,6 +3,25 @@ import { z } from 'zod';
 import { strings } from '@/constants/strings';
 import { http } from '@/services/http';
 
+// const adSchema = z
+//   .object({
+//     id: z.number().int(),
+//     shortLink: z.string().min(1),
+//     title: z.string(),
+//     price: z.string().regex(/^\d+(?:\.\d+)?$/),
+//     mainImage: z
+//       .object({ url: z.string().url() })
+//       .passthrough()
+//       .nullable()
+//       .optional(),
+//     category: z
+//       .object({ title: z.string() })
+//       .passthrough()
+//       .nullable()
+//       .optional(),
+//   })
+//   .passthrough();
+
 const adSchema = z
   .object({
     id: z.number().int(),
@@ -15,7 +34,14 @@ const adSchema = z
       .nullable()
       .optional(),
     category: z
-      .object({ title: z.string() })
+      .object({
+        title: z.string(),
+        parent: z
+          .object({ id: z.number().int(), title: z.string() })
+          .passthrough()
+          .nullable()
+          .optional(),
+      })
       .passthrough()
       .nullable()
       .optional(),

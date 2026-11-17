@@ -1,11 +1,13 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   Keyboard,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,10 +16,9 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SymbolView } from 'expo-symbols';
 
-import { strings } from '@/constants/strings';
 import { AppText as Text } from '@/components/app-text';
+import { strings } from '@/constants/strings';
 import { Colors, Spacing } from '@/constants/theme';
 import {
   getAds,
@@ -178,8 +179,16 @@ export default function HomeScreen() {
               }}
               placeholder={strings.tabs.adSearchPlaceholder}
               placeholderTextColor={colors.textSecondary}
+
               returnKeyType="search"
-              style={[styles.searchInput, { color: colors.text }]}
+              underlineColorAndroid="transparent"
+              selectionColor={colors.text}
+              cursorColor={colors.text}
+              style={[
+                styles.searchInput,
+                { color: colors.text, backgroundColor: 'transparent' },
+                Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as any) : null,
+              ]}
               textAlign="right"
               value={searchText}
             />
@@ -468,7 +477,7 @@ function CategoryChip({
       <Text
         style={[
           styles.categoryChipText,
-          { color: active ? colors.onPrimary : colors.text },
+          { color: active ? colors.onPrimary : colors.textSecondary },
         ]}>
         {category.title}
       </Text>
@@ -514,15 +523,18 @@ function AdCard({
         </View>
       )}
       <View style={styles.adDetails}>
-        {ad.category?.title ? (
-          <Text numberOfLines={1} style={[styles.category, { color: colors.textSecondary }]}>
-            {ad.category.title}
-          </Text>
-        ) : null}
         <Text numberOfLines={2} style={[styles.adTitle, { color: colors.text }]}>
           {ad.title}
         </Text>
-        <Text style={[styles.price, { color: colors.text }]}>
+        {ad.category ? (
+          <Text numberOfLines={1} style={[styles.category, { color: colors.textSecondary }]}>
+            {ad.category.parent?.title
+              ? `${ad.category.parent.title}/${ad.category.title}`
+              : ad.category.title}
+          </Text>
+        ) : null}
+
+        <Text style={[styles.price, { color: colors.textSecondary }]}>
           {price} {strings.tabs.priceUnit}
         </Text>
       </View>
@@ -563,10 +575,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
     marginVertical: Spacing.three,
     minHeight: 50,
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: Spacing.one,
     position: 'relative',
   },
-  searchInput: { flex: 1, fontSize: 15, minHeight: 50, textAlign: 'right' },
+  searchInput: { flex: 1, fontSize: 16, fontWeight: '500', minHeight: 50, textAlign: 'right', borderWidth: 0 },
   clearButton: { alignItems: 'center', height: 36, justifyContent: 'center', width: 36 },
   searchIconButton: { alignItems: 'center', height: 36, justifyContent: 'center', width: 36 },
   clearText: { fontSize: 25, lineHeight: 30 },
@@ -630,14 +642,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   suggestionDetails: { alignItems: 'flex-end', flex: 1, gap: 2 },
-  suggestionTitle: { fontSize: 14, fontWeight: '600', textAlign: 'right' },
+  suggestionTitle: { fontSize: 12, fontWeight: '500', textAlign: 'right' },
   suggestionHint: { fontSize: 12, lineHeight: 20, padding: Spacing.three, textAlign: 'right' },
   suggestionMessage: {
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 52,
   },
-  description: { fontSize: 16, lineHeight: 26, textAlign: 'right' },
+  description: { fontSize: 14, lineHeight: 26, textAlign: 'right' },
   message: { alignItems: 'center', flex: 1, gap: Spacing.three, justifyContent: 'center', padding: Spacing.four },
   retryText: { fontSize: 15, fontWeight: '600', textAlign: 'center' },
   adCard: {
@@ -652,9 +664,9 @@ const styles = StyleSheet.create({
   imagePlaceholder: { alignItems: 'center', justifyContent: 'center', padding: Spacing.two },
   imagePlaceholderText: { fontSize: 12, textAlign: 'center' },
   adDetails: { flex: 1, gap: Spacing.two, alignItems: 'flex-end' },
-  category: { fontSize: 13, textAlign: 'right' },
-  adTitle: { fontSize: 15, fontWeight: '600', textAlign: 'right' },
-  price: { fontSize: 15, fontWeight: '700', textAlign: 'right' },
+  category: { fontSize: 10, textAlign: 'right' },
+  adTitle: { fontSize: 14, fontWeight: '500', textAlign: 'right' },
+  price: { fontSize: 12, fontWeight: '500', textAlign: 'right' },
   footer: { alignItems: 'center', justifyContent: 'center', minHeight: 56 },
   pressed: { opacity: 0.7 },
 });
