@@ -103,8 +103,8 @@ export default function AdStageTwoScreen() {
               setErrorMessage(getAuthErrorMessage(error, strings.tabs.draftRestoreError)),
             );
           }}
-          style={[styles.retryButton, { backgroundColor: colors.text }]}>
-          <Text style={{ color: colors.background }}>{strings.common.retry}</Text>
+          style={[styles.retryButton, { backgroundColor: colors.primary }]}>
+          <Text style={{ color: colors.onPrimary }}>{strings.common.retry}</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -159,7 +159,7 @@ export default function AdStageTwoScreen() {
               </Text>
             ) : null}
             {priceLimitError ? (
-              <Text style={[styles.hint, { color: '#c62828' }]}>
+              <Text style={[styles.hint, { color: colors.error }]}>
                 {strings.tabs.adPriceMaximumHint}
               </Text>
             ) : null}
@@ -189,7 +189,7 @@ export default function AdStageTwoScreen() {
           </View>
 
           {errorMessage ? (
-            <Text accessibilityRole="alert" style={[styles.error, { color: '#c62828' }]}>
+            <Text accessibilityRole="alert" style={[styles.error, { color: colors.error }]}>
               {errorMessage}
             </Text>
           ) : null}
@@ -227,11 +227,11 @@ export default function AdStageTwoScreen() {
             style={({ pressed }) => [
               styles.footerButton,
               styles.primaryButton,
-              { backgroundColor: colors.text },
+              { backgroundColor: colors.primary },
               pressed && isFormValid && !errorMessage ? styles.pressed : null,
               !isFormValid || errorMessage ? styles.disabled : null,
             ]}>
-            <Text style={{ color: colors.background }}>{strings.tabs.continueAd}</Text>
+            <Text style={{ color: colors.onPrimary }}>{strings.tabs.continueAd}</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     gap: Spacing.two,
-    borderTopColor: '#e5e5e5',
+    borderTopColor: Colors.light.border,
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingBottom: 8,
     paddingHorizontal: Spacing.four,

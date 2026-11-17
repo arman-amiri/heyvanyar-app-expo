@@ -143,17 +143,17 @@ export default function VerifyScreen() {
               onPress={() => void handleVerify(code)}
               style={({ pressed }) => [
                 styles.button,
-                { backgroundColor: colors.text },
+                { backgroundColor: colors.primary },
                 pressed && !verifyOtpMutation.isPending ? styles.pressed : null,
                 verifyOtpMutation.isPending || code.length !== 5 ? styles.disabled : null,
               ]}>
               {verifyOtpMutation.isPending ? (
                 <ActivityIndicator
                   accessibilityLabel={strings.common.loading}
-                  color={colors.background}
+                  color={colors.onPrimary}
                 />
               ) : (
-                <Text style={[styles.buttonText, { color: colors.background }]}>
+                <Text style={[styles.buttonText, { color: colors.onPrimary }]}>
                   {strings.auth.verifyCode}
                 </Text>
               )}
@@ -223,5 +223,5 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.75 },
   disabled: { opacity: 0.6 },
   disabledText: { opacity: 0.65 },
-  error: { color: '#c62828', textAlign: 'right', lineHeight: 22 },
+  error: { color: Colors.light.error, textAlign: 'right', lineHeight: 22 },
 });

@@ -61,7 +61,7 @@ export default function ProfileScreen() {
             <SymbolView
               name={{ ios: 'person.crop.circle.fill', android: 'account_circle', web: 'account_circle' }}
               size={76}
-              tintColor={colors.textSecondary}
+              tintColor={colors.iconMuted}
             />
           </View>
           {profileQuery.isPending ? (
@@ -113,7 +113,7 @@ export default function ProfileScreen() {
         </View>
 
         {logoutError ? (
-          <Text accessibilityRole="alert" style={styles.error}>
+          <Text accessibilityRole="alert" style={[styles.error, { color: colors.error }]}>
             {logoutError}
           </Text>
         ) : null}
@@ -125,14 +125,14 @@ export default function ProfileScreen() {
           onPress={() => void handleLogout()}
           style={({ pressed }) => [
             styles.logoutButton,
-            { backgroundColor: colors.text },
+            { backgroundColor: colors.error },
             pressed && !isLoggingOut ? styles.pressed : null,
             isLoggingOut ? styles.disabled : null,
           ]}>
           {isLoggingOut ? (
-            <ActivityIndicator color={colors.background} />
+            <ActivityIndicator color={colors.onPrimary} />
           ) : (
-            <Text style={[styles.logoutText, { color: colors.background }]}>
+            <Text style={[styles.logoutText, { color: colors.onPrimary }]}>
               {strings.tabs.logout}
             </Text>
           )}
@@ -165,7 +165,7 @@ function ProfileMenuItem({
         pressed ? styles.pressed : null,
       ]}>
       <View style={styles.menuLabel}>
-        <SymbolView name={icon} size={22} tintColor={colors.textSecondary} />
+        <SymbolView name={icon} size={22} tintColor={colors.secondary} />
         <Text style={[styles.menuText, { color: colors.text }]}>{label}</Text>
       </View>
       <SymbolView
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   profileMessage: { alignItems: 'center', gap: Spacing.two },
   description: { fontSize: 16, lineHeight: 26, textAlign: 'right' },
   retryText: { fontSize: 15, fontWeight: '600', textAlign: 'center' },
-  error: { color: '#c62828', textAlign: 'right', lineHeight: 22 },
+  error: { textAlign: 'right', lineHeight: 22 },
   logoutButton: {
     alignItems: 'center',
     borderRadius: 12,

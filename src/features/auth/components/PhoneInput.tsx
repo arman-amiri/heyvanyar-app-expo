@@ -40,12 +40,12 @@ export function PhoneInput({
         style={[
           styles.input,
           { backgroundColor: colors.backgroundElement, color: colors.text },
-          error ? styles.inputError : null,
+          error ? [styles.inputError, { borderColor: colors.error }] : null,
         ]}
         textAlign="right"
         value={value}
       />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
     </View>
   );
 }
@@ -68,12 +68,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     writingDirection: 'ltr',
   },
-  inputError: {
-    borderColor: '#c62828',
-    borderWidth: 1,
-  },
-  error: {
-    color: '#c62828',
-    textAlign: 'right',
-  },
+  inputError: { borderWidth: 1 },
+  error: { textAlign: 'right' },
 });

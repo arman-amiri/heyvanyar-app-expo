@@ -45,7 +45,7 @@ export default function MyAdsScreen() {
                 accessibilityRole="button"
                 onPress={() => void adsQuery.refetch()}
                 style={({ pressed }) => pressed && styles.pressed}>
-                <Text style={[styles.retryText, { color: colors.text }]}>
+                <Text style={[styles.retryText, { color: colors.primary }]}>
                   {strings.common.retry}
                 </Text>
               </Pressable>
@@ -69,7 +69,7 @@ export default function MyAdsScreen() {
               <SymbolView
                 name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
                 size={22}
-                tintColor={colors.text}
+                tintColor={colors.icon}
               />
             </Pressable>
           </View>
@@ -160,6 +160,6 @@ const styles = StyleSheet.create({
   adDetails: { alignItems: 'flex-end', flex: 1, gap: Spacing.two },
   adTitle: { fontSize: 15, fontWeight: '600', textAlign: 'right' },
   price: { fontSize: 14, fontWeight: '700', textAlign: 'right' },
-  separator: { backgroundColor: '#e5e5e5', height: StyleSheet.hairlineWidth },
+  separator: { backgroundColor: Colors.light.border, height: StyleSheet.hairlineWidth },
   pressed: { opacity: 0.7 },
 });

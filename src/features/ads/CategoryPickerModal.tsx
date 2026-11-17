@@ -103,14 +103,14 @@ export function CategoryPickerModal({
     if (isError) {
       return (
         <View style={styles.queryState}>
-          <Text accessibilityRole="alert" style={[styles.errorMessage, { color: colors.text }]}>
+          <Text accessibilityRole="alert" style={[styles.errorMessage, { color: colors.error }]}>
             {getAuthErrorMessage(error, strings.tabs.categoryLoadingError)}
           </Text>
           <Pressable
             accessibilityRole="button"
             onPress={() => void refetch()}
-            style={[styles.retryButton, { backgroundColor: colors.text }]}>
-            <Text style={{ color: colors.background }}>{strings.common.retry}</Text>
+            style={[styles.retryButton, { backgroundColor: colors.primary }]}>
+            <Text style={{ color: colors.onPrimary }}>{strings.common.retry}</Text>
           </Pressable>
         </View>
       );
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
-  backdrop: { backgroundColor: 'rgba(0, 0, 0, 0.48)' },
+  backdrop: { backgroundColor: Colors.light.overlay, opacity: 0.48 },
   modalCard: {
     borderRadius: 0,
     height: '60%',

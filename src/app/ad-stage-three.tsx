@@ -212,8 +212,8 @@ export default function AdStageThreeScreen() {
               setErrorMessage(getAuthErrorMessage(error, strings.tabs.draftRestoreError)),
             );
           }}
-          style={[styles.retryButton, { backgroundColor: colors.text }]}>
-          <Text style={{ color: colors.background }}>{strings.common.retry}</Text>
+          style={[styles.retryButton, { backgroundColor: colors.primary }]}>
+          <Text style={{ color: colors.onPrimary }}>{strings.common.retry}</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -235,7 +235,7 @@ export default function AdStageThreeScreen() {
             accessibilityRole="switch"
             disabled={isPublishing}
             onValueChange={(value) => updateContactOptions({ activeChat: value })}
-            trackColor={{ false: colors.backgroundSelected, true: colors.textSecondary }}
+            trackColor={{ false: colors.backgroundSelected, true: colors.primary }}
             value={activeChat}
           />
         </View>
@@ -249,13 +249,13 @@ export default function AdStageThreeScreen() {
             accessibilityRole="switch"
             disabled={isPublishing}
             onValueChange={(value) => updateContactOptions({ showMobile: value })}
-            trackColor={{ false: colors.backgroundSelected, true: colors.textSecondary }}
+            trackColor={{ false: colors.backgroundSelected, true: colors.primary }}
             value={showMobile}
           />
         </View>
 
         {!hasContactOption ? (
-          <Text style={[styles.error, { color: '#c62828' }]}>{strings.tabs.contactOptionRequired}</Text>
+          <Text style={[styles.error, { color: colors.error }]}>{strings.tabs.contactOptionRequired}</Text>
         ) : null}
         {!isMediaReady ? (
           <Text style={[styles.error, { color: colors.textSecondary }]}>
@@ -263,7 +263,7 @@ export default function AdStageThreeScreen() {
           </Text>
         ) : null}
         {errorMessage ? (
-          <Text accessibilityRole="alert" style={[styles.error, { color: '#c62828' }]}>
+          <Text accessibilityRole="alert" style={[styles.error, { color: colors.error }]}>
             {errorMessage}
           </Text>
         ) : null}
@@ -297,14 +297,14 @@ export default function AdStageThreeScreen() {
           style={({ pressed }) => [
             styles.footerButton,
             styles.footerPrimaryButton,
-            { backgroundColor: colors.text },
+            { backgroundColor: colors.primary },
             pressed && !isPublishing ? styles.pressed : null,
             isPublishing || !isPublishReady ? styles.disabled : null,
           ]}>
           {isPublishing ? (
-            <ActivityIndicator color={colors.background} />
+            <ActivityIndicator color={colors.onPrimary} />
           ) : (
-            <Text style={{ color: colors.background }}>
+            <Text style={{ color: colors.onPrimary }}>
               {shortLink ? strings.tabs.editAdPublish : strings.tabs.publishAd}
             </Text>
           )}
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   },
   optionLabel: { flex: 1, fontSize: 15, textAlign: 'right' },
   footer: {
-    borderTopColor: '#e5e5e5',
+    borderTopColor: Colors.light.border,
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: Spacing.two,

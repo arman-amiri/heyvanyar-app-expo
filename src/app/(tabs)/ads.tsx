@@ -362,7 +362,7 @@ export default function AdsScreen() {
   if (draftStatus === 'error') {
     return (
       <SafeAreaView style={[styles.centered, { backgroundColor: colors.background }]}>
-        <Text style={[styles.error, { color: colors.text }]}>{errorMessage}</Text>
+        <Text style={[styles.error, { color: colors.error }]}>{errorMessage}</Text>
         <Pressable
           accessibilityRole="button"
           onPress={() => {
@@ -371,8 +371,8 @@ export default function AdsScreen() {
               setErrorMessage(getAuthErrorMessage(error, strings.tabs.draftRestoreError)),
             );
           }}
-          style={[styles.smallButton, { backgroundColor: colors.text }]}>
-          <Text style={{ color: colors.background }}>{strings.common.retry}</Text>
+          style={[styles.smallButton, { backgroundColor: colors.primary }]}>
+          <Text style={{ color: colors.onPrimary }}>{strings.common.retry}</Text>
         </Pressable>
         <Pressable accessibilityRole="button" onPress={() => void handleCancel()}>
           <Text style={{ color: colors.textSecondary }}>{strings.tabs.cancelAd}</Text>
@@ -458,7 +458,7 @@ export default function AdsScreen() {
                   }}
                   style={[
                     styles.photoButton,
-                    index === 0 ? styles.primaryPhoto : null,
+                    index === 0 ? { borderColor: colors.primary, borderWidth: 2 } : null,
                   ]}>
                   <Image
                     source={{ uri: photo.previewUri }}
@@ -470,9 +470,9 @@ export default function AdsScreen() {
                   {photo.status !== 'uploaded' ? (
                     <View style={styles.uploadOverlay}>
                       {photo.status === 'uploading' ? (
-                        <ActivityIndicator size="small" color="#ffffff" />
+                        <ActivityIndicator size="small" color={colors.onPrimary} />
                       ) : (
-                        <Text style={styles.failedMark}>!</Text>
+                        <Text style={[styles.failedMark, { color: colors.onPrimary }]}>!</Text>
                       )}
                     </View>
                   ) : null}
@@ -482,11 +482,11 @@ export default function AdsScreen() {
                   accessibilityRole="button"
                   hitSlop={6}
                   onPress={() => void handleRemovePhoto(photo)}
-                  style={styles.removeButton}>
+                  style={[styles.removeButton, { backgroundColor: colors.surfaceMuted }]}>
                   <SymbolView
                     name={{ ios: 'xmark', android: 'close', web: 'close' }}
                     size={14}
-                    tintColor="#b3261e"
+                    tintColor={colors.error}
                   />
                 </Pressable>
                 {index === 0 ? (
@@ -598,7 +598,7 @@ export default function AdsScreen() {
       </ScrollView>
 
       {errorMessage ? (
-        <Text accessibilityRole="alert" style={styles.error}>
+        <Text accessibilityRole="alert" style={[styles.error, { color: colors.error }]}>
           {errorMessage}
         </Text>
       ) : null}
@@ -636,11 +636,11 @@ export default function AdsScreen() {
           }
           style={({ pressed }) => [
             styles.footerButton,
-            { backgroundColor: colors.text },
+            { backgroundColor: colors.primary },
             pressed && !hasPendingUpload && !isPicking && category ? styles.pressed : null,
             hasPendingUpload || isPicking || !category ? styles.disabled : null,
           ]}>
-          <Text style={[styles.continueText, { color: colors.background }]}>
+          <Text style={[styles.continueText, { color: colors.onPrimary }]}>
             {strings.tabs.continueAd}
           </Text>
         </Pressable>
@@ -705,22 +705,21 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     width: 80,
   },
-  primaryPhoto: { borderColor: '#208AEF', borderWidth: 2 },
   thumbnail: { height: 80, width: 80 },
   uploadOverlay: {
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.28)',
+    backgroundColor: Colors.light.overlay,
     bottom: 0,
     justifyContent: 'center',
     left: 0,
     position: 'absolute',
     right: 0,
     top: 0,
+    opacity: 0.28,
   },
-  failedMark: { color: '#ffffff', fontSize: 20, fontWeight: '700' },
+  failedMark: { fontSize: 20, fontWeight: '700' },
   removeButton: {
     alignItems: 'center',
-    backgroundColor: '#e6e6e6',
     borderRadius: 12,
     height: 24,
     justifyContent: 'center',
@@ -757,7 +756,7 @@ const styles = StyleSheet.create({
   uploadingRow: { alignItems: 'center', flexDirection: 'row', gap: Spacing.one },
   removeVideoText: { fontSize: 24 },
   footer: {
-    borderTopColor: '#e5e5e5',
+    borderTopColor: Colors.light.border,
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: Spacing.two,
@@ -777,7 +776,7 @@ const styles = StyleSheet.create({
   continueText: { fontSize: 15, fontWeight: '700' },
   pressed: { opacity: 0.75 },
   disabled: { opacity: 0.55 },
-  error: { color: '#c62828', lineHeight: 22, paddingHorizontal: Spacing.four, textAlign: 'right' },
+  error: { lineHeight: 22, paddingHorizontal: Spacing.four, textAlign: 'right' },
   smallButton: {
     alignItems: 'center',
     borderRadius: 10,

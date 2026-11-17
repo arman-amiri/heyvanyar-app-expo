@@ -68,8 +68,8 @@ export default function RootLayout() {
                   accessibilityLabel={strings.common.retry}
                   accessibilityRole="button"
                   onPress={() => void restoreSession()}
-                  style={[styles.retryButton, { backgroundColor: colors.text }]}>
-                  <Text style={{ color: colors.background }}>{strings.common.retry}</Text>
+                  style={[styles.retryButton, { backgroundColor: colors.primary }]}>
+                  <Text style={{ color: colors.onPrimary }}>{strings.common.retry}</Text>
                 </Pressable>
               </View>
             </SafeAreaView>

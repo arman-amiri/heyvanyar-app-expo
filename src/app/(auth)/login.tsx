@@ -122,17 +122,17 @@ export default function LoginScreen() {
               onPress={() => void handleSendCode()}
               style={({ pressed }) => [
                 styles.button,
-                { backgroundColor: colors.text },
+                { backgroundColor: colors.primary },
                 pressed && !sendOtpMutation.isPending ? styles.pressed : null,
                 sendOtpMutation.isPending ? styles.disabled : null,
               ]}>
               {sendOtpMutation.isPending ? (
                 <ActivityIndicator
                   accessibilityLabel={strings.common.loading}
-                  color={colors.background}
+                  color={colors.onPrimary}
                 />
               ) : (
-                <Text style={[styles.buttonText, { color: colors.background }]}>
+                <Text style={[styles.buttonText, { color: colors.onPrimary }]}>
                   {strings.auth.sendCode}
                 </Text>
               )}
@@ -177,5 +177,5 @@ const styles = StyleSheet.create({
   buttonText: { fontSize: 16, fontWeight: '700' },
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.6 },
-  error: { color: '#c62828', textAlign: 'right', lineHeight: 22 },
+  error: { color: Colors.light.error, textAlign: 'right', lineHeight: 22 },
 });

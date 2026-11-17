@@ -1,6 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
+import { Colors } from '@/constants/theme';
+
 interface AdVideoPreviewProps {
   uri: string;
 }
@@ -22,7 +24,7 @@ export function AdVideoPreview({ uri }: AdVideoPreviewProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#000000',
+    backgroundColor: Colors.light.surfaceMuted,
     height: 200,
   },
   video: {

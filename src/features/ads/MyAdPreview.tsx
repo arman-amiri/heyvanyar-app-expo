@@ -138,11 +138,11 @@ export default function MyAdPreviewScreen({
             />
           ) : needsMediaLookup && mediaQuery.isPending ? (
             <View style={[styles.mediaPlaceholder, { height: mediaHeight }]}>
-              <ActivityIndicator color="#ffffff" />
+              <ActivityIndicator color={colors.primary} />
             </View>
           ) : needsMediaLookup ? (
             <View style={[styles.mediaPlaceholder, { height: mediaHeight }]}>
-              <Text style={styles.placeholderText}>
+              <Text style={[styles.placeholderText, { color: colors.textSubtle }]}>
                 {mediaQuery.isError
                   ? getAuthErrorMessage(mediaQuery.error, strings.tabs.adMediaLoadingError)
                   : strings.tabs.adMediaLoadingError}
@@ -150,7 +150,9 @@ export default function MyAdPreviewScreen({
             </View>
           ) : (
             <View style={[styles.mediaPlaceholder, { height: mediaHeight }]}>
-              <Text style={styles.placeholderText}>{strings.tabs.adImageUnavailable}</Text>
+              <Text style={[styles.placeholderText, { color: colors.textSubtle }]}>
+                {strings.tabs.adImageUnavailable}
+              </Text>
             </View>
           )}
         </View>
@@ -341,13 +343,17 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 18, fontWeight: '700', textAlign: 'right' },
   backButton: { alignItems: 'center', height: 44, justifyContent: 'center', width: 44 },
-  gallery: { backgroundColor: '#000000', width: '100%' },
-  slide: { alignItems: 'center', backgroundColor: '#000000', justifyContent: 'center' },
+  gallery: { backgroundColor: Colors.light.surfaceMuted, width: '100%' },
+  slide: {
+    alignItems: 'center',
+    backgroundColor: Colors.light.surfaceMuted,
+    justifyContent: 'center',
+  },
   mediaPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  placeholderText: { color: '#ffffff', fontSize: 14, textAlign: 'center' },
+  placeholderText: { fontSize: 14, textAlign: 'center' },
   details: { gap: Spacing.two, padding: Spacing.four },
   contactActions: {
-    borderTopColor: '#e5e5e5',
+    borderTopColor: Colors.light.border,
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row-reverse',
     gap: Spacing.two,

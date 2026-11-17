@@ -101,7 +101,7 @@ export default function MyAdManagementScreen() {
           accessibilityRole="button"
           onPress={() => void adQuery.refetch()}
           style={({ pressed }) => [styles.retryButton, pressed ? styles.pressed : null]}>
-          <Text style={{ color: colors.text }}>{strings.common.retry}</Text>
+          <Text style={{ color: colors.primary }}>{strings.common.retry}</Text>
         </Pressable>
         <BackButton colors={colors} />
       </SafeAreaView>
@@ -137,7 +137,7 @@ export default function MyAdManagementScreen() {
                   <View
                     style={[
                       styles.bar,
-                      { backgroundColor: colors.text, height: `${(item.count / 32) * 100}%` },
+                      { backgroundColor: colors.primary, height: `${(item.count / 32) * 100}%` },
                     ]}
                   />
                 </View>
@@ -180,7 +180,7 @@ export default function MyAdManagementScreen() {
           />
         </View>
         {actionError ? (
-          <Text accessibilityRole="alert" style={[styles.error, { color: '#c62828' }]}>
+          <Text accessibilityRole="alert" style={[styles.error, { color: colors.error }]}>
             {actionError}
           </Text>
         ) : null}
@@ -231,7 +231,7 @@ function MenuItem({
         pressed ? styles.pressed : null,
         disabled ? styles.disabled : null,
       ]}>
-      <Text style={[styles.menuLabel, { color: destructive ? '#c62828' : colors.text }]}>
+      <Text style={[styles.menuLabel, { color: destructive ? colors.error : colors.text }]}>
         {label}
       </Text>
       {symbol ? (
@@ -242,7 +242,7 @@ function MenuItem({
             web: symbol === 'eye' ? 'visibility' : symbol === 'pencil' ? 'edit' : 'delete',
           }}
           size={20}
-          tintColor={destructive ? '#c62828' : colors.textSecondary}
+          tintColor={destructive ? colors.error : colors.secondary}
         />
       ) : disabled ? (
         <ActivityIndicator color={colors.textSecondary} size="small" />

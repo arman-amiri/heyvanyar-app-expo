@@ -70,14 +70,21 @@ assets/
 
 ## Colors
 Use only the colors defined in the theme. Never create new hex codes and never hardcode colors in components.
-- primary: #F59E0B
-- secondary: #0F766E
-- background: #FFF8F0
+- primary: #7E2EC3 
+- onPrimary: #FFFFFF
+- secondary: #71717A (muted gray — trust accents, focus rings, links, verified badges)
+- background: #FFFFFF (**all screens use a pure white background**)
 - surface: #FFFFFF
-- text: #1F2937
-- textMuted: #6B7280
-- error: #DC2626
-- success: #16A34A
+- surfaceMuted: #F4F4F5 (subtle section separation only)
+- border: #E4E4E7 (dividers, card borders, input borders)
+- text: #2A2A30
+- textMuted: #71717A
+- textSubtle: #A1A1AA (placeholders, disabled text, captions)
+- icon: #2A2A30
+- iconMuted: #808080
+- overlay: #000000 (only for modal scrims, with low opacity — never as a fill)
+- error: #C32E2E (reuses primary hue for destructive states — see Forms)
+- success: #15803D
 
 ## Typography
 - Font: **IRANSans** (apply it globally through the theme, not per widget/component)

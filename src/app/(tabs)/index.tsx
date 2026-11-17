@@ -461,14 +461,14 @@ function CategoryChip({
       style={({ pressed }) => [
         styles.categoryChip,
         active
-          ? { backgroundColor: colors.text, borderColor: colors.text }
+          ? { backgroundColor: colors.primary, borderColor: colors.primary }
           : { borderColor: colors.backgroundSelected },
         pressed ? styles.pressed : null,
       ]}>
       <Text
         style={[
           styles.categoryChipText,
-          { color: active ? colors.background : colors.text },
+          { color: active ? colors.onPrimary : colors.text },
         ]}>
         {category.title}
       </Text>
