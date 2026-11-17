@@ -8,13 +8,14 @@ import {
   Switch,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
+import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText as Text } from '@/components/app-text';
 import { strings } from '@/constants/strings';
 import { Colors, Spacing } from '@/constants/theme';
-import { createAd } from '@/features/ads/createAdApi';
+import { createAd, updateAd } from '@/features/ads/createAdApi';
 import { useAdDraftStore } from '@/features/ads/draftStore';
 import { deleteStoredMedia } from '@/features/ads/mediaStorage';
 import { MAX_AD_PRICE } from '@/features/ads/priceUtils';
@@ -23,7 +24,11 @@ import { HttpError } from '@/services/http';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function AdStageThreeScreen() {
+  const { shortLink: rawShortLink } = useLocalSearchParams<{ shortLink?: string | string[] }>();
+  const shortLink = Array.isArray(rawShortLink) ? rawShortLink[0] : rawShortLink;
+  const queryClient = useQueryClient();
   const draftStatus = useAdDraftStore((state) => state.status);
+  const editShortLink = useAdDraftStore((state) => state.editShortLink);
   const category = useAdDraftStore((state) => state.category);
   const details = useAdDraftStore((state) => state.details);
   const photos = useAdDraftStore((state) => state.photos);
@@ -40,12 +45,16 @@ export default function AdStageThreeScreen() {
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
   useEffect(() => {
-    if (draftStatus === 'idle') {
-      void hydrate().catch((error: unknown) =>
+    const needsHydration =
+      draftStatus === 'idle' ||
+      (draftStatus === 'ready' &&
+        (shortLink ? editShortLink !== shortLink : editShortLink !== null));
+    if (needsHydration) {
+      void hydrate(shortLink).catch((error: unknown) =>
         setErrorMessage(getAuthErrorMessage(error, strings.tabs.draftRestoreError)),
       );
     }
-  }, [draftStatus, hydrate]);
+  }, [draftStatus, editShortLink, hydrate, shortLink]);
 
   const photosAreReady = photos.every(
     (photo) => photo.status === 'uploaded' && photo.id !== undefined,
@@ -91,6 +100,7 @@ export default function AdStageThreeScreen() {
       (draft.video.status === 'uploaded' && Boolean(draft.video.storedName));
     if (
       !draft.category ||
+      (shortLink && draft.editShortLink !== shortLink) ||
       !isDetailsValid ||
       !validPhotos ||
       !validVideo ||
@@ -113,7 +123,7 @@ export default function AdStageThreeScreen() {
       const images = draft.photos.flatMap((photo) =>
         photo.id === undefined ? [] : [photo.id],
       );
-      await createAd({
+      const request = {
         title: draft.details.title,
         price: draft.details.price,
         description: draft.details.description,
@@ -123,13 +133,29 @@ export default function AdStageThreeScreen() {
         ...(draft.video?.storedName ? { videoStoredName: draft.video.storedName } : {}),
         activeChat: draft.activeChat,
         showMobile: draft.showMobile,
-      });
+      };
+      if (shortLink) {
+        await updateAd(shortLink, request);
+      } else {
+        await createAd(request);
+      }
+
+      if (shortLink) {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['my-ads'] }),
+          queryClient.invalidateQueries({ queryKey: ['my-ad', shortLink] }),
+        ]);
+      }
 
       try {
         const media = await clearDraft();
         const cleanupResults = await Promise.allSettled([
-          ...media.photos.map((photo) => deleteStoredMedia(photo.key, photo.uri)),
-          ...(media.video ? [deleteStoredMedia(media.video.key, media.video.uri)] : []),
+          ...media.photos
+            .filter((photo) => !photo.remote)
+            .map((photo) => deleteStoredMedia(photo.key, photo.uri)),
+          ...(media.video && !media.video.remote
+            ? [deleteStoredMedia(media.video.key, media.video.uri)]
+            : []),
         ]);
         if (cleanupResults.some((result) => result.status === 'rejected')) {
           Alert.alert(strings.tabs.mediaCleanupError);
@@ -138,7 +164,11 @@ export default function AdStageThreeScreen() {
         Alert.alert(strings.tabs.adPublishCleanupError);
       }
 
-      router.replace('/(tabs)/profile');
+      router.replace(
+        shortLink
+          ? { pathname: '/my-ads/[shortLink]', params: { shortLink } }
+          : '/(tabs)/profile',
+      );
     } catch (error) {
       if (error instanceof HttpError && error.status === 401) {
         router.replace({
@@ -147,7 +177,12 @@ export default function AdStageThreeScreen() {
         });
         return;
       }
-      setErrorMessage(getAuthErrorMessage(error, strings.tabs.adPublishError));
+      setErrorMessage(
+        getAuthErrorMessage(
+          error,
+          shortLink ? strings.tabs.adUpdateError : strings.tabs.adPublishError,
+        ),
+      );
     } finally {
       publishLock.current = false;
       setIsPublishing(false);
@@ -173,7 +208,7 @@ export default function AdStageThreeScreen() {
           accessibilityRole="button"
           onPress={() => {
             setErrorMessage('');
-            void hydrate().catch((error: unknown) =>
+            void hydrate(shortLink).catch((error: unknown) =>
               setErrorMessage(getAuthErrorMessage(error, strings.tabs.draftRestoreError)),
             );
           }}
@@ -188,7 +223,7 @@ export default function AdStageThreeScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={[styles.title, { color: colors.text }]}>
-          {strings.tabs.adStageThreeTitle}
+          {shortLink ? strings.tabs.editAdDetailsTitle : strings.tabs.adStageThreeTitle}
         </Text>
 
         <View style={[styles.optionRow, { backgroundColor: colors.backgroundElement }]}>
@@ -238,7 +273,13 @@ export default function AdStageThreeScreen() {
         <Pressable
           accessibilityRole="button"
           disabled={isPublishing}
-          onPress={() => router.replace('/ad-stage-two')}
+          onPress={() =>
+            router.replace(
+              shortLink
+                ? { pathname: '/ad-stage-two', params: { shortLink } }
+                : '/ad-stage-two',
+            )
+          }
           style={({ pressed }) => [
             styles.footerButton,
             styles.footerSecondaryButton,
@@ -263,7 +304,9 @@ export default function AdStageThreeScreen() {
           {isPublishing ? (
             <ActivityIndicator color={colors.background} />
           ) : (
-            <Text style={{ color: colors.background }}>{strings.tabs.publishAd}</Text>
+            <Text style={{ color: colors.background }}>
+              {shortLink ? strings.tabs.editAdPublish : strings.tabs.publishAd}
+            </Text>
           )}
         </Pressable>
       </View>

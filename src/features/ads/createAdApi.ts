@@ -19,3 +19,11 @@ export async function createAd(ad: CreateAdRequest): Promise<void> {
     body: JSON.stringify(ad),
   });
 }
+
+export async function updateAd(shortLink: string, ad: CreateAdRequest): Promise<void> {
+  await http.request(`/ads/update/${encodeURIComponent(shortLink)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(ad),
+  });
+}

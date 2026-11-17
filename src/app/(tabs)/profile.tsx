@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     minHeight: 58,
     paddingHorizontal: Spacing.three,
   },
-  menuLabel: { alignItems: 'center', flexDirection: 'row', gap: Spacing.two },
+  menuLabel: { alignItems: 'center', flexDirection: 'row-reverse', gap: Spacing.two },
   menuText: { fontSize: 15, fontWeight: '600', textAlign: 'right' },
   profileMessage: { alignItems: 'center', gap: Spacing.two },
   description: { fontSize: 16, lineHeight: 26, textAlign: 'right' },

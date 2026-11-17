@@ -67,7 +67,7 @@ export default function MyAdsScreen() {
               onPress={() => router.back()}
               style={({ pressed }) => [styles.backButton, pressed ? styles.pressed : null]}>
               <SymbolView
-                name={{ ios: 'chevron.right', android: 'arrow_forward', web: 'arrow_forward' }}
+                name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
                 size={22}
                 tintColor={colors.text}
               />
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     minHeight: 56,
   },
-  title: { fontSize: 22, fontWeight: '700', textAlign: 'right' },
+  title: { fontSize: 18, fontWeight: '700', textAlign: 'right' },
   backButton: { alignItems: 'center', height: 44, justifyContent: 'center', width: 44 },
   message: { alignItems: 'center', flex: 1, gap: Spacing.two, justifyContent: 'center', padding: Spacing.four },
   messageText: { fontSize: 15, lineHeight: 24, textAlign: 'center' },

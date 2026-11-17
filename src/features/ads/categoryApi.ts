@@ -19,7 +19,7 @@ const categoriesResponseSchema = z
 export type Category = z.infer<typeof categorySchema>;
 
 async function getCategories(path: string): Promise<Category[]> {
-  const response = await http.request(path, { method: 'GET' });
+  const response = await http.request(path, { method: 'GET', auth: false });
   const parsed = categoriesResponseSchema.safeParse(response);
   if (!parsed.success) throw new Error(strings.auth.invalidResponse);
   return parsed.data.data;

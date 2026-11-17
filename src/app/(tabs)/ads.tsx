@@ -9,7 +9,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { SymbolView } from 'expo-symbols';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -32,8 +32,11 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/store/authStore';
 
 export default function AdsScreen() {
+  const { shortLink: rawShortLink } = useLocalSearchParams<{ shortLink?: string | string[] }>();
+  const shortLink = Array.isArray(rawShortLink) ? rawShortLink[0] : rawShortLink;
   const authStatus = useAuthStore((state) => state.status);
   const draftStatus = useAdDraftStore((state) => state.status);
+  const editShortLink = useAdDraftStore((state) => state.editShortLink);
   const photos = useAdDraftStore((state) => state.photos);
   const video = useAdDraftStore((state) => state.video);
   const category = useAdDraftStore((state) => state.category);
@@ -60,12 +63,16 @@ export default function AdsScreen() {
   }, [authStatus]);
 
   useEffect(() => {
-    if (authStatus === 'authenticated' && draftStatus === 'idle') {
-      void hydrate().catch((error: unknown) => {
+    const needsHydration =
+      draftStatus === 'idle' ||
+      (draftStatus === 'ready' &&
+        (shortLink ? editShortLink !== shortLink : editShortLink !== null));
+    if (authStatus === 'authenticated' && needsHydration) {
+      void hydrate(shortLink).catch((error: unknown) => {
         setErrorMessage(getAuthErrorMessage(error, strings.tabs.draftRestoreError));
       });
     }
-  }, [authStatus, draftStatus, hydrate]);
+  }, [authStatus, draftStatus, editShortLink, hydrate, shortLink]);
 
   const setUploadError = useCallback((error: unknown) => {
     setErrorMessage(getAuthErrorMessage(error, strings.tabs.mediaUploadFailed));
@@ -250,7 +257,7 @@ export default function AdsScreen() {
       }
 
       void startVideoUpload(newVideo);
-      if (previousVideo) {
+      if (previousVideo && !previousVideo.remote) {
         void deleteStoredMedia(previousVideo.key, previousVideo.uri).catch(setUploadError);
       }
     } catch (error) {
@@ -266,7 +273,7 @@ export default function AdsScreen() {
     setErrorMessage('');
     try {
       const removed = await removePhotoFromDraft(photo.key);
-      if (removed) await deleteStoredMedia(removed.key, removed.uri);
+      if (removed && !removed.remote) await deleteStoredMedia(removed.key, removed.uri);
     } catch (error) {
       setUploadError(error);
     }
@@ -278,7 +285,7 @@ export default function AdsScreen() {
     setErrorMessage('');
     try {
       await setVideo(null);
-      await deleteStoredMedia(video.key, video.uri);
+      if (!video.remote) await deleteStoredMedia(video.key, video.uri);
     } catch (error) {
       setUploadError(error);
     }
@@ -291,13 +298,21 @@ export default function AdsScreen() {
     try {
       const draft = await clearDraft();
       const cleanupResults = await Promise.allSettled([
-        ...draft.photos.map((photo) => deleteStoredMedia(photo.key, photo.uri)),
-        ...(draft.video ? [deleteStoredMedia(draft.video.key, draft.video.uri)] : []),
+        ...draft.photos
+          .filter((photo) => !photo.remote)
+          .map((photo) => deleteStoredMedia(photo.key, photo.uri)),
+        ...(draft.video && !draft.video.remote
+          ? [deleteStoredMedia(draft.video.key, draft.video.uri)]
+          : []),
       ]);
       if (cleanupResults.some((result) => result.status === 'rejected')) {
         Alert.alert(strings.tabs.mediaCleanupError);
       }
-      router.replace('/(tabs)');
+      router.replace(
+        shortLink
+          ? { pathname: '/my-ads/[shortLink]', params: { shortLink } }
+          : '/(tabs)',
+      );
     } catch (error) {
       setUploadError(error);
     }
@@ -352,7 +367,7 @@ export default function AdsScreen() {
           accessibilityRole="button"
           onPress={() => {
             setErrorMessage('');
-            void hydrate().catch((error: unknown) =>
+            void hydrate(shortLink).catch((error: unknown) =>
               setErrorMessage(getAuthErrorMessage(error, strings.tabs.draftRestoreError)),
             );
           }}
@@ -370,7 +385,9 @@ export default function AdsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.titleRow}>
-          <Text style={[styles.title, { color: colors.text }]}>{strings.tabs.createAdTitle}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>
+            {shortLink ? strings.tabs.editAdDetailsTitle : strings.tabs.createAdTitle}
+          </Text>
           <Pressable
             accessibilityRole="button"
             onPress={() => void handleCancel()}
@@ -380,7 +397,7 @@ export default function AdsScreen() {
               pressed ? styles.pressed : null,
             ]}>
             <Text style={[styles.headerCancelText, { color: colors.text }]}>
-              {strings.tabs.cancelAdCreation}
+              {shortLink ? strings.tabs.editAdCancel : strings.tabs.cancelAdCreation}
             </Text>
           </Pressable>
         </View>
@@ -590,7 +607,13 @@ export default function AdsScreen() {
         <Pressable
           accessibilityRole="button"
           disabled={isPicking}
-          onPress={() => router.replace('/(tabs)')}
+          onPress={() =>
+            router.replace(
+              shortLink
+                ? { pathname: '/my-ads/[shortLink]', params: { shortLink } }
+                : '/(tabs)',
+            )
+          }
           style={({ pressed }) => [
             styles.footerButton,
             styles.cancelButton,
@@ -604,7 +627,13 @@ export default function AdsScreen() {
           accessibilityRole="button"
           accessibilityState={{ disabled: hasPendingUpload || isPicking || !category }}
           disabled={hasPendingUpload || isPicking || !category}
-          onPress={() => router.push('/ad-stage-two')}
+          onPress={() =>
+            router.push(
+              shortLink
+                ? { pathname: '/ad-stage-two', params: { shortLink } }
+                : '/ad-stage-two',
+            )
+          }
           style={({ pressed }) => [
             styles.footerButton,
             { backgroundColor: colors.text },

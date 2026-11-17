@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText as Text } from '@/components/app-text';
@@ -25,7 +25,10 @@ import { getAuthErrorMessage, normalizeDigits } from '@/features/auth/api';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function AdStageTwoScreen() {
+  const { shortLink: rawShortLink } = useLocalSearchParams<{ shortLink?: string | string[] }>();
+  const shortLink = Array.isArray(rawShortLink) ? rawShortLink[0] : rawShortLink;
   const draftStatus = useAdDraftStore((state) => state.status);
+  const editShortLink = useAdDraftStore((state) => state.editShortLink);
   const details = useAdDraftStore((state) => state.details);
   const hydrate = useAdDraftStore((state) => state.hydrate);
   const setDetails = useAdDraftStore((state) => state.setDetails);
@@ -46,12 +49,16 @@ export default function AdStageTwoScreen() {
     descriptionLength <= 1000;
 
   useEffect(() => {
-    if (draftStatus === 'idle') {
-      void hydrate().catch((error: unknown) =>
+    const needsHydration =
+      draftStatus === 'idle' ||
+      (draftStatus === 'ready' &&
+        (shortLink ? editShortLink !== shortLink : editShortLink !== null));
+    if (needsHydration) {
+      void hydrate(shortLink).catch((error: unknown) =>
         setErrorMessage(getAuthErrorMessage(error, strings.tabs.draftRestoreError)),
       );
     }
-  }, [draftStatus, hydrate]);
+  }, [draftStatus, editShortLink, hydrate, shortLink]);
 
   const updateDetails = (changes: Partial<DraftDetails>) => {
     setErrorMessage('');
@@ -92,7 +99,7 @@ export default function AdStageTwoScreen() {
           accessibilityRole="button"
           onPress={() => {
             setErrorMessage('');
-            void hydrate().catch((error: unknown) =>
+            void hydrate(shortLink).catch((error: unknown) =>
               setErrorMessage(getAuthErrorMessage(error, strings.tabs.draftRestoreError)),
             );
           }}
@@ -111,7 +118,9 @@ export default function AdStageTwoScreen() {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled">
-          <Text style={[styles.title, { color: colors.text }]}>{strings.tabs.adDetailsTitle}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>
+            {shortLink ? strings.tabs.editAdDetailsTitle : strings.tabs.adDetailsTitle}
+          </Text>
 
           <View style={styles.field}>
             <Text style={[styles.label, { color: colors.text }]}>{strings.tabs.adTitleLabel}</Text>
@@ -189,7 +198,13 @@ export default function AdStageTwoScreen() {
         <View style={[styles.footer, { backgroundColor: colors.background }]}>
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.replace('/(tabs)/ads')}
+            onPress={() =>
+              router.replace(
+                shortLink
+                  ? { pathname: '/(tabs)/ads', params: { shortLink } }
+                  : '/(tabs)/ads',
+              )
+            }
             style={({ pressed }) => [
               styles.footerButton,
               styles.secondaryButton,
@@ -202,7 +217,13 @@ export default function AdStageTwoScreen() {
             accessibilityRole="button"
             accessibilityState={{ disabled: !isFormValid || Boolean(errorMessage) }}
             disabled={!isFormValid || Boolean(errorMessage)}
-            onPress={() => router.push('/ad-stage-three')}
+            onPress={() =>
+              router.push(
+                shortLink
+                  ? { pathname: '/ad-stage-three', params: { shortLink } }
+                  : '/ad-stage-three',
+              )
+            }
             style={({ pressed }) => [
               styles.footerButton,
               styles.primaryButton,
