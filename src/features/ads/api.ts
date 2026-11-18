@@ -139,6 +139,7 @@ const adDetailsSchema = z
     price: z.string().regex(/^\d+(?:\.\d+)?$/),
     description: z.string(),
     publishAt: z.string().min(1),
+    locationId: z.number().int().positive().nullable().optional(),
     category: z
       .object({
         id: z.number().int(),
@@ -175,20 +176,31 @@ export type MyAd = z.infer<typeof myAdSchema>;
 export type AdMedia = z.infer<typeof adMediaSchema>;
 export type AdDetails = z.infer<typeof adDetailsSchema>;
 
-export async function getAds(page: number): Promise<AdsPage> {
-  const response = await http.request(`/ads?page=${page}`, {
-    method: 'GET',
-    auth: false,
-  });
-  const parsed = adsResponseSchema.safeParse(response);
-  if (!parsed.success) throw new Error(strings.auth.invalidResponse);
-  return parsed.data.data;
+export interface SearchAdsParams {
+  page: number;
+  limit?: number;
+  search?: string;
+  categoryId?: number;
+  locationIds: number[];
 }
 
-export async function searchAds(query: string, page: number, limit = 20): Promise<AdsPage> {
-  const params = `q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`;
-  const response = await http.request(`/ads/search?${params}`, {
-    method: 'GET',
+export async function searchAds({
+  page,
+  limit = 20,
+  search,
+  categoryId,
+  locationIds,
+}: SearchAdsParams): Promise<AdsPage> {
+  const response = await http.request('/ads/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      page,
+      limit,
+      search: search?.trim() || undefined,
+      categoryId,
+      locationIds,
+    }),
     auth: false,
   });
   const parsed = adsResponseSchema.safeParse(response);
@@ -204,20 +216,6 @@ export async function searchAdCategories(query: string): Promise<AdCategorySugge
   const parsed = adCategorySuggestionsResponseSchema.safeParse(response);
   if (!parsed.success) throw new Error(strings.auth.invalidResponse);
   return parsed.data.data.categories;
-}
-
-export async function getAdsByCategory(
-  categoryId: number,
-  page: number,
-  limit = 20,
-): Promise<AdsPage> {
-  const response = await http.request(
-    `/ads/category-id/${categoryId}?page=${page}&limit=${limit}`,
-    { method: 'GET', auth: false },
-  );
-  const parsed = adsResponseSchema.safeParse(response);
-  if (!parsed.success) throw new Error(strings.auth.invalidResponse);
-  return parsed.data.data;
 }
 
 export async function getMyAds(page: number): Promise<MyAd[]> {

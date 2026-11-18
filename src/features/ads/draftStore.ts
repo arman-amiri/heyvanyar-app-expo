@@ -38,11 +38,25 @@ const storedCategorySchema = z
     title: z.string().min(1),
   })
   .strict();
+const storedLocationSelectionSchema = z
+  .object({
+    key: z.string().min(1),
+    title: z.string().min(1),
+    whole: z.boolean(),
+    pathIds: z.array(z.number().int().positive()),
+    type: z.enum(['ostan', 'shahrestan', 'bakhsh', 'dehestan', 'shahr_roosta', 'iran']),
+    locationId: z.number().int().positive().nullable(),
+    selected: z.boolean(),
+  })
+  .strict();
 const storedDetailsSchema = z
   .object({
     title: z.string(),
     price: z.string(),
     description: z.string(),
+    locationId: z.number().int().positive().nullable().optional(),
+    locationTitle: z.string().nullable().optional(),
+    locationSelection: storedLocationSelectionSchema.nullable().optional(),
   })
   .strict();
 const storedDraftSchema = z
@@ -196,7 +210,14 @@ function mapEditMedia(ad: AdDetails) {
     category: ad.category
       ? { categoryId: ad.category.id, title: ad.category.title }
       : null,
-    details: { title: ad.title, price: String(Number(ad.price)), description: ad.description },
+    details: {
+      title: ad.title,
+      price: String(Number(ad.price)),
+      description: ad.description,
+      locationId: ad.locationId ?? null,
+      locationTitle: null,
+      locationSelection: null,
+    },
     activeChat: ad.activeChat ?? true,
     showMobile: ad.showMobile ?? true,
   };
@@ -208,7 +229,14 @@ export const useAdDraftStore = create<AdDraftState>((set, get) => ({
   photos: [],
   video: null,
   category: null,
-  details: { title: '', price: '', description: '' },
+  details: {
+    title: '',
+    price: '',
+    description: '',
+    locationId: null,
+    locationTitle: null,
+    locationSelection: null,
+  },
   activeChat: true,
   showMobile: true,
   hydrate: async (shortLink) => {
@@ -236,7 +264,14 @@ export const useAdDraftStore = create<AdDraftState>((set, get) => ({
           photos: [],
           video: null,
           category: null,
-          details: { title: '', price: '', description: '' },
+          details: {
+            title: '',
+            price: '',
+            description: '',
+            locationId: null,
+            locationTitle: null,
+            locationSelection: null,
+          },
           activeChat: true,
           showMobile: true,
           status: 'ready',
@@ -270,7 +305,14 @@ export const useAdDraftStore = create<AdDraftState>((set, get) => ({
           }
         : null;
       const category = parsed.data.category ?? null;
-      const details = parsed.data.details ?? { title: '', price: '', description: '' };
+      const details = {
+        title: parsed.data.details?.title ?? '',
+        price: parsed.data.details?.price ?? '',
+        description: parsed.data.details?.description ?? '',
+        locationId: parsed.data.details?.locationId ?? null,
+        locationTitle: parsed.data.details?.locationTitle ?? null,
+        locationSelection: parsed.data.details?.locationSelection ?? null,
+      };
       const activeChat = parsed.data.activeChat ?? true;
       const showMobile = parsed.data.showMobile ?? true;
       set({
@@ -287,7 +329,10 @@ export const useAdDraftStore = create<AdDraftState>((set, get) => ({
         photos.some((photo, index) => photo.status !== parsed.data.photos[index]?.status) ||
         video?.status !== parsed.data.video?.status ||
         parsed.data.activeChat === undefined ||
-        parsed.data.showMobile === undefined
+        parsed.data.showMobile === undefined ||
+        parsed.data.details?.locationId === undefined ||
+        parsed.data.details?.locationTitle === undefined ||
+        parsed.data.details?.locationSelection === undefined
       ) {
         await persistDraft(key, photos, video, category, details, activeChat, showMobile);
       }
@@ -368,7 +413,14 @@ export const useAdDraftStore = create<AdDraftState>((set, get) => ({
       photos: [],
       video: null,
       category: null,
-      details: { title: '', price: '', description: '' },
+      details: {
+        title: '',
+        price: '',
+        description: '',
+        locationId: null,
+        locationTitle: null,
+        locationSelection: null,
+      },
       activeChat: true,
       showMobile: true,
       status: 'ready',

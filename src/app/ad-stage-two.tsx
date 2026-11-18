@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
@@ -22,6 +23,8 @@ import {
   priceToPersianWords,
 } from '@/features/ads/priceUtils';
 import { getAuthErrorMessage, normalizeDigits } from '@/features/auth/api';
+import { LocationPickerModal } from '@/features/location/LocationPickerModal';
+import type { LocationSelectionAction } from '@/features/location/locationApi';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function AdStageTwoScreen() {
@@ -34,12 +37,17 @@ export default function AdStageTwoScreen() {
   const setDetails = useAdDraftStore((state) => state.setDetails);
   const [errorMessage, setErrorMessage] = useState('');
   const [priceLimitError, setPriceLimitError] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [locationPickerSelection, setLocationPickerSelection] = useState<
+    LocationSelectionAction[]
+  >([]);
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const titleLength = details.title.trim().length;
   const priceAmount = Number(details.price);
   const descriptionLength = details.description.trim().length;
   const isFormValid =
+    details.locationId != null &&
     titleLength >= 3 &&
     titleLength <= 100 &&
     /^[0-9]+$/.test(details.price) &&
@@ -67,7 +75,34 @@ export default function AdStageTwoScreen() {
     );
   };
 
+  const openLocationPicker = () => {
+    Keyboard.dismiss();
+    setLocationPickerSelection(
+      details.locationSelection ? [details.locationSelection] : [],
+    );
+    setShowLocationPicker(true);
+  };
+
+  const confirmLocation = (_locationIds: number[], selectedLocation?: LocationSelectionAction) => {
+    if (!selectedLocation && details.locationId != null && !details.locationSelection) {
+      setShowLocationPicker(false);
+      return;
+    }
+    updateDetails({
+      locationId: selectedLocation?.locationId ?? null,
+      locationTitle: selectedLocation?.title ?? null,
+      locationSelection: selectedLocation ?? null,
+    });
+    setShowLocationPicker(false);
+  };
+
   const priceInWords = priceToPersianWords(details.price);
+  const locationDisplay =
+    details.locationTitle ??
+    details.locationSelection?.title ??
+    (details.locationId != null
+      ? strings.tabs.adLocationSelected
+      : strings.tabs.adLocationPlaceholder);
 
   const handlePriceChange = (value: string) => {
     const digits = normalizeDigits(value).replace(/\D/g, '').replace(/^0+(?=\d)/, '');
@@ -121,6 +156,38 @@ export default function AdStageTwoScreen() {
           <Text style={[styles.title, { color: colors.text }]}>
             {shortLink ? strings.tabs.editAdDetailsTitle : strings.tabs.adDetailsTitle}
           </Text>
+
+          <View style={styles.field}>
+            <Text style={[styles.label, { color: colors.text }]}>
+              {strings.tabs.adLocationLabel}
+            </Text>
+            <Pressable
+              accessibilityLabel={strings.tabs.adLocationLabel}
+              accessibilityRole="button"
+              onPress={openLocationPicker}
+              style={({ pressed }) => [
+                styles.locationField,
+                { backgroundColor: colors.backgroundElement },
+                pressed ? styles.pressed : null,
+              ]}>
+              <Text
+                style={[
+                  styles.locationFieldText,
+                  {
+                    color:
+                      details.locationId != null ? colors.text : colors.textSecondary,
+                  },
+                ]}>
+                {locationDisplay}
+              </Text>
+              <Text style={[styles.locationArrow, { color: colors.textSecondary }]}>‹</Text>
+            </Pressable>
+            {details.locationId == null ? (
+              <Text style={[styles.hint, { color: colors.error }]}>
+                {strings.tabs.adLocationRequired}
+              </Text>
+            ) : null}
+          </View>
 
           <View style={styles.field}>
             <Text style={[styles.label, { color: colors.text }]}>{strings.tabs.adTitleLabel}</Text>
@@ -235,6 +302,14 @@ export default function AdStageTwoScreen() {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
+      <LocationPickerModal
+        onClose={() => setShowLocationPicker(false)}
+        onConfirm={confirmLocation}
+        onSelectionChange={setLocationPickerSelection}
+        selection={locationPickerSelection}
+        selectionMode="single"
+        visible={showLocationPicker}
+      />
     </SafeAreaView>
   );
 }
@@ -262,6 +337,16 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     writingDirection: 'rtl',
   },
+  locationField: {
+    alignItems: 'center',
+    borderRadius: 10,
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    minHeight: 50,
+    paddingHorizontal: Spacing.three,
+  },
+  locationFieldText: { flex: 1, fontSize: 15, textAlign: 'right' },
+  locationArrow: { fontSize: 24, marginStart: Spacing.two },
   descriptionInput: { minHeight: 320, paddingTop: Spacing.three },
   priceInWords: { fontSize: 12, lineHeight: 20, textAlign: 'right' },
   hint: { fontSize: 13, lineHeight: 20, textAlign: 'right' },

@@ -21,8 +21,6 @@ import { AppText as Text } from '@/components/app-text';
 import { strings } from '@/constants/strings';
 import { Colors, Spacing } from '@/constants/theme';
 import {
-  getAds,
-  getAdsByCategory,
   searchAdCategories,
   searchAds,
   type Ad,
@@ -34,6 +32,8 @@ import {
   type Category,
 } from '@/features/ads/categoryApi';
 import { getAuthErrorMessage } from '@/features/auth/api';
+import { LocationPickerModal } from '@/features/location/LocationPickerModal';
+import type { LocationSelectionAction } from '@/features/location/locationApi';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type AdFilter =
@@ -51,6 +51,9 @@ export default function HomeScreen() {
   const [activeFilter, setActiveFilter] = useState<AdFilter>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [locationSelection, setLocationSelection] = useState<LocationSelectionAction[]>([]);
+  const [selectedLocationIds, setSelectedLocationIds] = useState<number[]>([]);
   const listRef = useRef<FlatList<Ad>>(null);
 
   useEffect(() => {
@@ -80,26 +83,24 @@ export default function HomeScreen() {
   });
   const adsQueryKey =
     activeFilter?.type === 'text'
-      ? ['ads', 'search', activeFilter.query]
+      ? ['ads', 'search', activeFilter.query, selectedLocationIds]
       : activeFilter?.type === 'category'
-        ? ['ads', 'category', activeFilter.categoryId]
-        : ['ads'];
+        ? ['ads', 'category', activeFilter.categoryId, selectedLocationIds]
+        : ['ads', selectedLocationIds];
 
   useEffect(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
-  }, [activeFilter]);
+  }, [activeFilter, selectedLocationIds]);
 
   const adsQuery = useInfiniteQuery({
     queryKey: adsQueryKey,
-    queryFn: ({ pageParam }) => {
-      if (activeFilter?.type === 'text') {
-        return searchAds(activeFilter.query, pageParam);
-      }
-      if (activeFilter?.type === 'category') {
-        return getAdsByCategory(activeFilter.categoryId, pageParam);
-      }
-      return getAds(pageParam);
-    },
+    queryFn: ({ pageParam }) =>
+      searchAds({
+        page: pageParam,
+        search: activeFilter?.type === 'text' ? activeFilter.query : undefined,
+        categoryId: activeFilter?.type === 'category' ? activeFilter.categoryId : undefined,
+        locationIds: selectedLocationIds,
+      }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.pagination.hasNextPage ? lastPage.pagination.page + 1 : undefined,
@@ -166,53 +167,78 @@ export default function HomeScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.screen}>
         <View pointerEvents="box-none" style={styles.searchSection}>
-          <View style={[styles.searchBox, { backgroundColor: colors.backgroundElement }]}>
-            <TextInput
-              accessibilityLabel={strings.tabs.adSearchPlaceholder}
-              autoCapitalize="none"
-              onChangeText={(value) => {
-                setSearchText(value);
-                setShowSuggestions(Boolean(value.trim()));
-              }}
-              onFocus={() => {
-                if (searchText.trim()) setShowSuggestions(true);
-              }}
-              placeholder={strings.tabs.adSearchPlaceholder}
-              placeholderTextColor={colors.textSecondary}
-
-              returnKeyType="search"
-              underlineColorAndroid="transparent"
-              selectionColor={colors.text}
-              cursorColor={colors.text}
-              style={[
-                styles.searchInput,
-                { color: colors.text, backgroundColor: 'transparent' },
-                Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as any) : null,
-              ]}
-              textAlign="right"
-              value={searchText}
-            />
-            {searchText ? (
-              <Pressable
-                accessibilityLabel={strings.common.clear}
-                accessibilityRole="button"
-                onPress={handleClearSearch}
-                style={({ pressed }) => [styles.clearButton, pressed ? styles.pressed : null]}>
-                <Text style={[styles.clearText, { color: colors.textSecondary }]}>×</Text>
-              </Pressable>
-            ) : null}
+          <View style={styles.searchRow}>
             <Pressable
-              accessibilityLabel={strings.tabs.searchButton}
+              accessibilityLabel={strings.tabs.locationModalTitle}
               accessibilityRole="button"
-              disabled={!searchText.trim()}
-              onPress={handleSearchByText}
-              style={({ pressed }) => [styles.searchIconButton, pressed ? styles.pressed : null]}>
+              onPress={() => {
+                Keyboard.dismiss();
+                setShowSuggestions(false);
+                setShowLocationPicker(true);
+              }}
+              style={({ pressed }) => [
+                styles.locationButton,
+                { backgroundColor: colors.backgroundElement },
+                pressed ? styles.pressed : null,
+              ]}>
               <SymbolView
-                name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
-                size={20}
+                name={{ ios: 'location', android: 'location_on', web: 'location_on' }}
+                size={21}
                 tintColor={colors.textSecondary}
               />
             </Pressable>
+            <View style={[styles.searchBox, { backgroundColor: colors.backgroundElement }]}>
+              <TextInput
+                accessibilityLabel={strings.tabs.adSearchPlaceholder}
+                autoCapitalize="none"
+                onChangeText={(value) => {
+                  setSearchText(value);
+                  setShowSuggestions(Boolean(value.trim()));
+                }}
+                onFocus={() => {
+                  if (searchText.trim()) setShowSuggestions(true);
+                }}
+                placeholder={strings.tabs.adSearchPlaceholder}
+                placeholderTextColor={colors.textSecondary}
+                returnKeyType="search"
+                underlineColorAndroid="transparent"
+                selectionColor={colors.text}
+                cursorColor={colors.text}
+                style={[
+                  styles.searchInput,
+                  { color: colors.text, backgroundColor: 'transparent' },
+                  Platform.OS === 'web'
+                    ? ({ outlineStyle: 'none', outlineWidth: 0 } as any)
+                    : null,
+                ]}
+                textAlign="right"
+                value={searchText}
+              />
+              {searchText ? (
+                <Pressable
+                  accessibilityLabel={strings.common.clear}
+                  accessibilityRole="button"
+                  onPress={handleClearSearch}
+                  style={({ pressed }) => [styles.clearButton, pressed ? styles.pressed : null]}>
+                  <Text style={[styles.clearText, { color: colors.textSecondary }]}>×</Text>
+                </Pressable>
+              ) : null}
+              <Pressable
+                accessibilityLabel={strings.tabs.searchButton}
+                accessibilityRole="button"
+                disabled={!searchText.trim()}
+                onPress={handleSearchByText}
+                style={({ pressed }) => [
+                  styles.searchIconButton,
+                  pressed ? styles.pressed : null,
+                ]}>
+                <SymbolView
+                  name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
+                  size={20}
+                  tintColor={colors.textSecondary}
+                />
+              </Pressable>
+            </View>
           </View>
         </View>
         <FlatList
@@ -446,6 +472,16 @@ export default function HomeScreen() {
             </View>
           </View>
         ) : null}
+        <LocationPickerModal
+          onClose={() => setShowLocationPicker(false)}
+          onConfirm={(locationIds) => {
+            setSelectedLocationIds(locationIds);
+            setShowLocationPicker(false);
+          }}
+          onSelectionChange={setLocationSelection}
+          selection={locationSelection}
+          visible={showLocationPicker}
+        />
       </View>
     </SafeAreaView>
   );
@@ -553,6 +589,15 @@ const styles = StyleSheet.create({
     zIndex: 30,
     backgroundColor: 'transparent',
   },
+  searchRow: { alignItems: 'center', flexDirection: 'row-reverse', gap: Spacing.two },
+  locationButton: {
+    alignItems: 'center',
+    borderRadius: 12,
+    height: 50,
+    justifyContent: 'center',
+    marginVertical: Spacing.three,
+    width: 50,
+  },
   searchBackdrop: {
     bottom: 0,
     left: 0,
@@ -572,6 +617,7 @@ const styles = StyleSheet.create({
   searchBox: {
     alignItems: 'center',
     borderRadius: 12,
+    flex: 1,
     flexDirection: 'row-reverse',
     marginVertical: Spacing.three,
     minHeight: 50,

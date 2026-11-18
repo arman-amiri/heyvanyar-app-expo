@@ -67,6 +67,7 @@ export default function AdStageThreeScreen() {
   const descriptionLength = details.description.trim().length;
   const price = Number(details.price);
   const isDetailsValid =
+    details.locationId != null &&
     titleLength >= 3 &&
     titleLength <= 100 &&
     /^[0-9]+$/.test(details.price) &&
@@ -101,6 +102,7 @@ export default function AdStageThreeScreen() {
     if (
       !draft.category ||
       (shortLink && draft.editShortLink !== shortLink) ||
+      draft.details.locationId == null ||
       !isDetailsValid ||
       !validPhotos ||
       !validVideo ||
@@ -109,9 +111,11 @@ export default function AdStageThreeScreen() {
       setErrorMessage(
         !validPhotos || !validVideo
           ? strings.tabs.adMediaNotReady
-          : !draft.activeChat && !draft.showMobile
-            ? strings.tabs.contactOptionRequired
-            : strings.tabs.adPublishError,
+          : draft.details.locationId == null
+            ? strings.tabs.adLocationRequired
+            : !draft.activeChat && !draft.showMobile
+              ? strings.tabs.contactOptionRequired
+              : strings.tabs.adPublishError,
       );
       return;
     }
@@ -127,6 +131,7 @@ export default function AdStageThreeScreen() {
         title: draft.details.title,
         price: draft.details.price,
         description: draft.details.description,
+        locationId: draft.details.locationId,
         categoryId: draft.category.categoryId,
         images,
         ...(images.length > 0 ? { mainImageId: images[0] } : {}),
@@ -225,6 +230,12 @@ export default function AdStageThreeScreen() {
         <Text style={[styles.title, { color: colors.text }]}>
           {shortLink ? strings.tabs.editAdDetailsTitle : strings.tabs.adStageThreeTitle}
         </Text>
+
+        {details.locationId == null ? (
+          <Text style={[styles.error, { color: colors.error }]}>
+            {strings.tabs.adLocationRequired}
+          </Text>
+        ) : null}
 
         <View style={[styles.optionRow, { backgroundColor: colors.backgroundElement }]}>
           <Text style={[styles.optionLabel, { color: colors.text }]}>

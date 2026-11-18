@@ -4,6 +4,7 @@ export interface CreateAdRequest {
   title: string;
   price: string;
   description: string;
+  locationId: number;
   categoryId: number;
   images: number[];
   mainImageId?: number;
