@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,6 +19,7 @@ import {
 } from '@/features/ads/api';
 import { formatPersianRelativeTime } from '@/features/ads/relativeTime';
 import { getAuthErrorMessage } from '@/features/auth/api';
+import { registerAdViewOnce } from '@/features/ads/viewTracking';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type MediaSlide = { type: 'video' | 'image'; key: string; uri: string };
@@ -39,6 +41,24 @@ export default function MyAdPreviewScreen({
     enabled: Boolean(shortLink),
     retry: false,
   });
+  const [viewTrackingError, setViewTrackingError] = useState('');
+  const adId = adQuery.data?.id;
+
+  useEffect(() => {
+    if (adId == null) return;
+    let isMounted = true;
+    void registerAdViewOnce(adId).catch((error: unknown) => {
+      if (isMounted) {
+        setViewTrackingError(
+          getAuthErrorMessage(error, strings.tabs.adViewTrackingError),
+        );
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [adId]);
+
   const needsMediaLookup =
     !showDisabledContactActions && adQuery.isSuccess && hasMissingMediaUrl(adQuery.data);
   const mediaQuery = useQuery({
@@ -92,7 +112,7 @@ export default function MyAdPreviewScreen({
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>{strings.tabs.myAdDetailsTitle}</Text>
+        {/* <Text style={[styles.headerTitle, { color: colors.text }]}>{strings.tabs.myAdDetailsTitle}</Text> */}
         <Pressable
           accessibilityLabel={strings.common.back}
           accessibilityRole="button"
@@ -175,6 +195,11 @@ export default function MyAdPreviewScreen({
             {price} {strings.tabs.priceUnit}
           </Text>
           <Text style={[styles.description, { color: colors.text }]}>{ad.description}</Text>
+          {viewTrackingError ? (
+            <Text accessibilityRole="alert" style={[styles.viewTrackingError, { color: colors.error }]}>
+              {viewTrackingError}
+            </Text>
+          ) : null}
         </View>
       </ScrollView>
       {showDisabledContactActions ? (
@@ -344,7 +369,7 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     paddingHorizontal: Spacing.three,
     minHeight: 52,
   },
@@ -382,6 +407,7 @@ const styles = StyleSheet.create({
   publishedAt: { fontSize: 12, textAlign: 'right' },
   price: { fontSize: 14, fontWeight: '400', textAlign: 'right' },
   description: { fontSize: 15, lineHeight: 27, textAlign: 'right' },
+  viewTrackingError: { fontSize: 12, textAlign: 'right' },
   messageHeader: {
     alignItems: 'center',
     flexDirection: 'row-reverse',

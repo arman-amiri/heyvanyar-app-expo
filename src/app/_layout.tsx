@@ -9,6 +9,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { AppText as Text } from '@/components/app-text';
 import { strings } from '@/constants/strings';
 import { Colors, FontFamilies, Spacing } from '@/constants/theme';
+import { getOrCreateGuestId } from '@/features/ads/viewTracking';
 import { useAuthStore } from '@/store/authStore';
 
 SplashScreen.preventAutoHideAsync();
@@ -44,6 +45,12 @@ export default function RootLayout() {
   useEffect(() => {
     void restoreSession();
   }, [restoreSession]);
+
+  useEffect(() => {
+    void getOrCreateGuestId().catch((error: unknown) => {
+      console.error('Failed to initialize ad view guest ID', error);
+    });
+  }, []);
 
   useEffect(() => {
     if (!isHydrated || (!fontsLoaded && !fontError)) return;

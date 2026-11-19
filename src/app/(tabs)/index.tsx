@@ -168,25 +168,7 @@ export default function HomeScreen() {
       <View style={styles.screen}>
         <View pointerEvents="box-none" style={styles.searchSection}>
           <View style={styles.searchRow}>
-            <Pressable
-              accessibilityLabel={strings.tabs.locationModalTitle}
-              accessibilityRole="button"
-              onPress={() => {
-                Keyboard.dismiss();
-                setShowSuggestions(false);
-                setShowLocationPicker(true);
-              }}
-              style={({ pressed }) => [
-                styles.locationButton,
-                { backgroundColor: colors.backgroundElement },
-                pressed ? styles.pressed : null,
-              ]}>
-              <SymbolView
-                name={{ ios: 'location', android: 'location_on', web: 'location_on' }}
-                size={21}
-                tintColor={colors.textSecondary}
-              />
-            </Pressable>
+
             <View style={[styles.searchBox, { backgroundColor: colors.backgroundElement }]}>
               <TextInput
                 accessibilityLabel={strings.tabs.adSearchPlaceholder}
@@ -238,7 +220,25 @@ export default function HomeScreen() {
                   tintColor={colors.textSecondary}
                 />
               </Pressable>
-            </View>
+            </View>            <Pressable
+              accessibilityLabel={strings.tabs.locationModalTitle}
+              accessibilityRole="button"
+              onPress={() => {
+                Keyboard.dismiss();
+                setShowSuggestions(false);
+                setShowLocationPicker(true);
+              }}
+              style={({ pressed }) => [
+                styles.locationButton,
+                { backgroundColor: colors.backgroundElement },
+                pressed ? styles.pressed : null,
+              ]}>
+              <SymbolView
+                name={{ ios: 'location', android: 'location_on', web: 'location_on' }}
+                size={21}
+                tintColor={colors.textSecondary}
+              />
+            </Pressable>
           </View>
         </View>
         <FlatList

@@ -140,6 +140,16 @@ const adDetailsSchema = z
     description: z.string(),
     publishAt: z.string().min(1),
     locationId: z.number().int().positive().nullable().optional(),
+    location: z
+      .object({
+        id: z.number().int().positive(),
+        title: z.string().min(1),
+        type: z.enum(['ostan', 'shahrestan', 'bakhsh', 'dehestan', 'shahr_roosta']),
+        parent: z.number().int().positive().nullable().optional(),
+      })
+      .passthrough()
+      .nullable()
+      .optional(),
     category: z
       .object({
         id: z.number().int(),
@@ -169,12 +179,43 @@ const adDetailsResponseSchema = z
   })
   .passthrough();
 
+const adViewResponseSchema = z
+  .object({
+    success: z.literal(true),
+  })
+  .passthrough();
+
+const adViewStatsSchema = z
+  .object({
+    granularity: z.enum(['hour', 'day']),
+    total: z.number().int().nonnegative(),
+    series: z.array(
+      z
+        .object({
+          label: z.string(),
+          value: z.number().int().nonnegative(),
+        })
+        .passthrough(),
+    ),
+  })
+  .passthrough();
+
 export type Ad = z.infer<typeof adSchema>;
 export type AdsPage = z.infer<typeof adsResponseSchema>['data'];
 export type AdCategorySuggestion = z.infer<typeof adCategorySuggestionSchema>;
 export type MyAd = z.infer<typeof myAdSchema>;
 export type AdMedia = z.infer<typeof adMediaSchema>;
 export type AdDetails = z.infer<typeof adDetailsSchema>;
+export type AdViewStats = z.infer<typeof adViewStatsSchema>;
+
+export interface AdViewPayload {
+  guestId: string;
+  osName: string;
+  osVersion: string;
+  deviceModel: string;
+  isEmulator: boolean;
+  appVersion: string;
+}
 
 export interface SearchAdsParams {
   page: number;
@@ -233,6 +274,27 @@ export async function getAdDetails(shortLink: string, auth = true): Promise<AdDe
   const parsed = adDetailsResponseSchema.safeParse(response);
   if (!parsed.success) throw new Error(strings.auth.invalidResponse);
   return parsed.data.data;
+}
+
+export async function postAdView(adId: number, payload: AdViewPayload): Promise<void> {
+  const response = await http.request(`/ads-view/${adId}/view`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    auth: false,
+  });
+  const parsed = adViewResponseSchema.safeParse(response);
+  if (!parsed.success) throw new Error(strings.auth.invalidResponse);
+}
+
+export async function getAdViewStats(adId: number): Promise<AdViewStats> {
+  const response = await http.request(`/ads-view/${adId}/view-stats`, {
+    method: 'GET',
+    auth: false,
+  });
+  const parsed = adViewStatsSchema.safeParse(response);
+  if (!parsed.success) throw new Error(strings.auth.invalidResponse);
+  return parsed.data;
 }
 
 export async function deleteMyAd(shortLink: string): Promise<void> {

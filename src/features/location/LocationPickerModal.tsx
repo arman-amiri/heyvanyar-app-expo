@@ -25,6 +25,7 @@ import {
 interface LocationPickerModalProps {
   visible: boolean;
   selection: LocationSelectionAction[];
+  initialLocation?: LocationSelectionAction;
   selectionMode?: 'multiple' | 'single';
   onClose: () => void;
   onConfirm: (
@@ -35,6 +36,24 @@ interface LocationPickerModalProps {
 }
 
 type CheckState = 'checked' | 'unchecked' | 'indeterminate';
+
+function getInitialPath(location?: LocationSelectionAction): Location[] {
+  if (
+    location?.locationId == null ||
+    !location.title ||
+    location.type === 'iran'
+  ) {
+    return [];
+  }
+  return [
+    {
+      id: location.locationId,
+      title: location.title,
+      type: location.type,
+      parent: null,
+    },
+  ];
+}
 
 const nextLocationType: Record<Location['type'], Location['type']> = {
   ostan: 'shahrestan',
@@ -55,12 +74,13 @@ function combineCheckStates(states: CheckState[]): CheckState {
 export function LocationPickerModal({
   visible,
   selection,
+  initialLocation,
   selectionMode = 'multiple',
   onClose,
   onConfirm,
   onSelectionChange,
 }: LocationPickerModalProps) {
-  const [path, setPath] = useState<Location[]>([]);
+  const [path, setPath] = useState<Location[]>(() => getInitialPath(initialLocation));
   const [confirmError, setConfirmError] = useState(false);
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
@@ -290,7 +310,7 @@ export function LocationPickerModal({
   };
 
   const handleClose = () => {
-    setPath([]);
+    setPath(getInitialPath(initialLocation));
     setConfirmError(false);
     onClose();
   };
@@ -354,7 +374,8 @@ export function LocationPickerModal({
               <ScrollView
                 contentContainerStyle={styles.chipList}
                 horizontal
-                showsHorizontalScrollIndicator={false}>
+                showsHorizontalScrollIndicator={false}
+                style={styles.chipScroller}>
                 {visibleSelections.map((item) => {
                   const label = item.whole
                     ? strings.tabs.locationWhole(item.title)
@@ -512,11 +533,13 @@ const styles = StyleSheet.create({
   backArrow: { fontSize: 28, lineHeight: 32 },
   chipList: {
     alignItems: 'center',
+    direction: 'rtl',
     flexDirection: 'row-reverse',
     gap: Spacing.two,
     minHeight: 42,
     paddingHorizontal: Spacing.one,
   },
+  chipScroller: { direction: 'rtl' },
   selectionChip: {
     alignItems: 'center',
     borderRadius: 16,

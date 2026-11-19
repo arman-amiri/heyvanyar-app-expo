@@ -29,7 +29,7 @@ export default function TabsLayout() {
         },
         tabBarItemStyle: { paddingVertical: 4 },
         tabBarLabelStyle: {
-          fontSize: 14,
+          fontSize: 12,
           fontFamily: FontFamilies.regular,
           includeFontPadding: true,
           lineHeight: 28,
@@ -42,7 +42,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <SymbolView
               name={{ ios: 'person.fill', android: 'person', web: 'person' }}
-              size={size}
+              size={22}
               tintColor={color}
             />
           ),
@@ -59,7 +59,7 @@ export default function TabsLayout() {
                 android: 'chat',
                 web: 'chat',
               }}
-              size={size}
+              size={22}
               tintColor={color}
             />
           ),
@@ -73,7 +73,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <SymbolView
               name={{ ios: 'plus.app.fill', android: 'add_box', web: 'add_box' }}
-              size={size}
+              size={22}
               tintColor={color}
             />
           ),
@@ -86,7 +86,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <SymbolView
               name={{ ios: 'house.fill', android: 'home', web: 'home' }}
-              size={size}
+              size={22}
               tintColor={color}
             />
           ),

@@ -2,7 +2,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useEffect, useState, type ComponentProps } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText as Text } from '@/components/app-text';
@@ -19,6 +26,7 @@ export default function ProfileScreen() {
   const queryClient = useQueryClient();
   const [logoutError, setLogoutError] = useState('');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const profileQuery = useQuery({
     queryKey: ['profile', 'me'],
     queryFn: getCurrentUser,
@@ -116,33 +124,12 @@ export default function ProfileScreen() {
             {logoutError}
           </Text>
         ) : null}
-        {/* <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={strings.tabs.logout}
-          accessibilityState={{ disabled: isLoggingOut }}
-          disabled={isLoggingOut}
-          onPress={() => void handleLogout()}
-          style={({ pressed }) => [
-            styles.logoutButton,
-            { backgroundColor: colors.error },
-            pressed && !isLoggingOut ? styles.pressed : null,
-            isLoggingOut ? styles.disabled : null,
-          ]}>
-          {isLoggingOut ? (
-            <ActivityIndicator color={colors.onPrimary} />
-          ) : (
-            <Text style={[styles.logoutText, { color: colors.onPrimary }]}>
-              {strings.tabs.logout}
-            </Text>
-          )}
-        </Pressable> */}
-
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={strings.tabs.logout}
           accessibilityState={{ disabled: isLoggingOut }}
           disabled={isLoggingOut}
-          onPress={() => void handleLogout()}
+          onPress={() => setShowLogoutConfirmation(true)}
           style={({ pressed }) => [
             styles.logoutButton,
             { backgroundColor: colors.backgroundElement },
@@ -170,6 +157,61 @@ export default function ProfileScreen() {
           )}
         </Pressable>
       </ScrollView>
+      <Modal
+        animationType="slide"
+        onRequestClose={() => setShowLogoutConfirmation(false)}
+        transparent
+        visible={showLogoutConfirmation}>
+        <View style={styles.logoutModalOverlay}>
+          <Pressable
+            accessibilityLabel={strings.tabs.logoutConfirmClose}
+            accessibilityRole="button"
+            onPress={() => setShowLogoutConfirmation(false)}
+            style={[StyleSheet.absoluteFill, { backgroundColor: colors.overlay, opacity: 0.45 }]}
+          />
+          <View style={styles.logoutConfirmSheet}>
+            <Text style={[styles.logoutConfirmMessage, { color: colors.text }]}>
+              {strings.tabs.logoutConfirmMessage}
+            </Text>
+            <View style={styles.logoutConfirmActions}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setShowLogoutConfirmation(false)}
+                style={({ pressed }) => [
+                  styles.logoutConfirmButton,
+                  { borderColor: colors.primary },
+                  pressed ? styles.pressed : null,
+                ]}>
+                <Text style={[styles.logoutConfirmButtonText, { color: colors.primary }]}>
+                  {strings.tabs.logoutConfirmNo}
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: isLoggingOut }}
+                disabled={isLoggingOut}
+                onPress={() => {
+                  setShowLogoutConfirmation(false);
+                  void handleLogout();
+                }}
+                style={({ pressed }) => [
+                  styles.logoutConfirmButton,
+                  { borderColor: colors.primary },
+                  pressed && !isLoggingOut ? styles.pressed : null,
+                  isLoggingOut ? styles.disabled : null,
+                ]}>
+                {isLoggingOut ? (
+                  <ActivityIndicator color={colors.primary} />
+                ) : (
+                  <Text style={[styles.logoutConfirmButtonText, { color: colors.primary }]}>
+                    {strings.tabs.logoutConfirmYes}
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -245,7 +287,27 @@ const styles = StyleSheet.create({
     minHeight: 58,
     paddingHorizontal: Spacing.three,
   },
-  logoutText: { fontSize: 14, fontWeight: '500' },
+  logoutModalOverlay: { flex: 1, justifyContent: 'flex-end' },
+  logoutConfirmSheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    height: '15%',
+    justifyContent: 'space-between',
+    padding: Spacing.three,
+  },
+  logoutConfirmMessage: { fontSize: 14, textAlign: 'center' },
+  logoutConfirmActions: { flexDirection: 'row-reverse', gap: Spacing.two },
+  logoutConfirmButton: {
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    borderWidth: 1,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  logoutConfirmButtonText: { fontSize: 16, textAlign: 'center' , fontWeight : '500' },
   pressed: { opacity: 0.75 },
   disabled: { opacity: 0.6 },
 });

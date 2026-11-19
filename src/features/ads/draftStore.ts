@@ -57,6 +57,7 @@ const storedDetailsSchema = z
     locationId: z.number().int().positive().nullable().optional(),
     locationTitle: z.string().nullable().optional(),
     locationSelection: storedLocationSelectionSchema.nullable().optional(),
+    locationResolved: z.boolean().optional(),
   })
   .strict();
 const storedDraftSchema = z
@@ -162,6 +163,26 @@ function mediaMimeType(file: AdMedia): string {
   return 'image/jpeg';
 }
 
+function mapAdLocation(ad: AdDetails) {
+  const location = ad.location;
+  return {
+    locationId: location?.id ?? ad.locationId ?? null,
+    locationTitle: location?.title ?? null,
+    locationSelection: location
+      ? {
+          key: `location:${location.id}`,
+          title: location.title,
+          whole: false,
+          pathIds: [location.id],
+          type: location.type,
+          locationId: location.id,
+          selected: true,
+        }
+      : null,
+    locationResolved: true,
+  };
+}
+
 function mapEditMedia(ad: AdDetails) {
   const images = new Map<number, AdMedia>();
   const imageFiles = [
@@ -214,9 +235,7 @@ function mapEditMedia(ad: AdDetails) {
       title: ad.title,
       price: String(Number(ad.price)),
       description: ad.description,
-      locationId: ad.locationId ?? null,
-      locationTitle: null,
-      locationSelection: null,
+      ...mapAdLocation(ad),
     },
     activeChat: ad.activeChat ?? true,
     showMobile: ad.showMobile ?? true,
@@ -305,14 +324,29 @@ export const useAdDraftStore = create<AdDraftState>((set, get) => ({
           }
         : null;
       const category = parsed.data.category ?? null;
-      const details = {
+      let details = {
         title: parsed.data.details?.title ?? '',
         price: parsed.data.details?.price ?? '',
         description: parsed.data.details?.description ?? '',
         locationId: parsed.data.details?.locationId ?? null,
         locationTitle: parsed.data.details?.locationTitle ?? null,
         locationSelection: parsed.data.details?.locationSelection ?? null,
+        locationResolved: parsed.data.details?.locationResolved ?? false,
       };
+      if (shortLink && !details.locationResolved) {
+        if (details.locationSelection == null) {
+          const remoteLocation = mapAdLocation(await getAdDetails(shortLink));
+          details = {
+            ...details,
+            locationId: remoteLocation.locationId ?? details.locationId,
+            locationTitle: remoteLocation.locationTitle ?? details.locationTitle,
+            locationSelection: remoteLocation.locationSelection,
+            locationResolved: true,
+          };
+        } else {
+          details = { ...details, locationResolved: true };
+        }
+      }
       const activeChat = parsed.data.activeChat ?? true;
       const showMobile = parsed.data.showMobile ?? true;
       set({
@@ -332,7 +366,8 @@ export const useAdDraftStore = create<AdDraftState>((set, get) => ({
         parsed.data.showMobile === undefined ||
         parsed.data.details?.locationId === undefined ||
         parsed.data.details?.locationTitle === undefined ||
-        parsed.data.details?.locationSelection === undefined
+        parsed.data.details?.locationSelection === undefined ||
+        parsed.data.details?.locationResolved === undefined
       ) {
         await persistDraft(key, photos, video, category, details, activeChat, showMobile);
       }

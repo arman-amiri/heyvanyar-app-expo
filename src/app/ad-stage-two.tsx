@@ -77,8 +77,19 @@ export default function AdStageTwoScreen() {
 
   const openLocationPicker = () => {
     Keyboard.dismiss();
+    const savedSelection = details.locationSelection;
     setLocationPickerSelection(
-      details.locationSelection ? [details.locationSelection] : [],
+      savedSelection?.locationId != null
+        ? [
+            {
+              ...savedSelection,
+              key: `whole:${savedSelection.locationId}`,
+              whole: false,
+              pathIds: [savedSelection.locationId],
+              selected: true,
+            },
+          ]
+        : [],
     );
     setShowLocationPicker(true);
   };
@@ -303,6 +314,12 @@ export default function AdStageTwoScreen() {
         </View>
       </KeyboardAvoidingView>
       <LocationPickerModal
+        key={
+          details.locationSelection
+            ? `${details.locationSelection.locationId}:${details.locationSelection.title}:${details.locationSelection.type}:${details.locationSelection.whole}`
+            : 'no-location'
+        }
+        initialLocation={details.locationSelection ?? undefined}
         onClose={() => setShowLocationPicker(false)}
         onConfirm={confirmLocation}
         onSelectionChange={setLocationPickerSelection}

@@ -64,7 +64,7 @@ export default function MyAdsScreen() {
             <Pressable
               accessibilityLabel={strings.common.back}
               accessibilityRole="button"
-              onPress={() => router.back()}
+              onPress={() => router.push('/(tabs)/profile')} 
               style={({ pressed }) => [styles.backButton, pressed ? styles.pressed : null]}>
               <SymbolView
                 name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
@@ -142,8 +142,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     minHeight: 56,
   },
-  title: { fontSize: 18, fontWeight: '700', textAlign: 'right' },
-  backButton: { alignItems: 'center', height: 44, justifyContent: 'center', width: 44 },
+  title: { fontSize: 16, fontWeight: '500', textAlign: 'right' },
+  backButton: { alignItems: 'center', height: 44, justifyContent: 'center', },
   message: { alignItems: 'center', flex: 1, gap: Spacing.two, justifyContent: 'center', padding: Spacing.four },
   messageText: { fontSize: 15, lineHeight: 24, textAlign: 'center' },
   retryText: { fontSize: 15, fontWeight: '600', textAlign: 'center' },

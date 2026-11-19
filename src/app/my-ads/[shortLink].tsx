@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -10,25 +11,14 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SymbolView } from 'expo-symbols';
 
 import { AppText as Text } from '@/components/app-text';
 import { strings } from '@/constants/strings';
 import { Colors, Spacing } from '@/constants/theme';
-import { deleteMyAd, getAdDetails } from '@/features/ads/api';
+import { deleteMyAd, getAdDetails, getAdViewStats } from '@/features/ads/api';
 import MyAdPreviewScreen from '@/features/ads/MyAdPreview';
 import { getAuthErrorMessage } from '@/features/auth/api';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-
-const weeklyViews = [
-  { day: 'ش', count: 12 },
-  { day: 'ی', count: 18 },
-  { day: 'د', count: 9 },
-  { day: 'س', count: 24 },
-  { day: 'چ', count: 16 },
-  { day: 'پ', count: 32 },
-  { day: 'ج', count: 21 },
-];
 
 export default function MyAdManagementScreen() {
   const { shortLink: rawShortLink, view: rawView } = useLocalSearchParams<{
@@ -48,6 +38,20 @@ export default function MyAdManagementScreen() {
     enabled: Boolean(shortLink) && !isPreview,
     retry: false,
   });
+  const adId = adQuery.data?.id;
+  const viewStatsQuery = useQuery({
+    queryKey: ['ad-view-stats', adId],
+    queryFn: () => {
+      if (adId == null) throw new Error(strings.auth.invalidResponse);
+      return getAdViewStats(adId);
+    },
+    enabled: adId != null && !isPreview,
+    retry: false,
+  });
+  const maxViewCount = Math.max(
+    1,
+    ...(viewStatsQuery.data?.series.map((item) => item.value) ?? []),
+  );
 
   if (isPreview) return <MyAdPreviewScreen />;
 
@@ -112,39 +116,67 @@ export default function MyAdManagementScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>{strings.tabs.adManagementTitle}</Text>
-        <BackButton colors={colors} />
+        <BackToMyAdsButton colors={colors} />
       </View>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.chartCard, { backgroundColor: colors.backgroundElement }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {strings.tabs.adViewsTitle}
           </Text>
-          <Text style={[styles.totalViews, { color: colors.text }]}>
-            {new Intl.NumberFormat('fa-IR').format(
-              weeklyViews.reduce((total, item) => total + item.count, 0),
-            )}
-          </Text>
-          <Text style={[styles.chartCaption, { color: colors.textSecondary }]}>
-            {strings.tabs.adViewsCaption}
-          </Text>
-          <View accessibilityLabel={strings.tabs.adViewsTitle} style={styles.chart}>
-            {weeklyViews.map((item) => (
-              <View key={item.day} style={styles.chartColumn}>
-                <Text style={[styles.chartValue, { color: colors.textSecondary }]}>
-                  {new Intl.NumberFormat('fa-IR').format(item.count)}
-                </Text>
-                <View style={styles.barTrack}>
-                  <View
-                    style={[
-                      styles.bar,
-                      { backgroundColor: colors.primary, height: `${(item.count / 32) * 100}%` },
-                    ]}
-                  />
+          {viewStatsQuery.isPending ? (
+            <ActivityIndicator color={colors.textSecondary} />
+          ) : viewStatsQuery.isError ? (
+            <Text accessibilityRole="alert" style={[styles.message, { color: colors.error }]}>
+              {getAuthErrorMessage(viewStatsQuery.error, strings.tabs.adViewStatsError)}
+            </Text>
+          ) : (
+            <>
+              <Text style={[styles.totalViews, { color: colors.text }]}>
+                {new Intl.NumberFormat('fa-IR').format(viewStatsQuery.data.total)}
+              </Text>
+              <Text style={[styles.chartCaption, { color: colors.textSecondary }]}>
+                {viewStatsQuery.data.granularity === 'hour'
+                  ? strings.tabs.adViewsHourCaption
+                  : strings.tabs.adViewsDayCaption}
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.chartScroll}>
+                <View
+                  accessibilityLabel={strings.tabs.adViewsTitle}
+                  style={[
+                    styles.chart,
+                    { width: Math.max(280, viewStatsQuery.data.series.length * 44) },
+                  ]}>
+                  {viewStatsQuery.data.series.map((item, index) => {
+                    const barHeight =
+                      item.value === 0
+                        ? '0%'
+                        : `${Math.max(4, (item.value / maxViewCount) * 100)}%`;
+                    return (
+                      <View key={`${item.label}-${index}`} style={styles.chartColumn}>
+                        <Text style={[styles.chartValue, { color: colors.textSecondary }]}>
+                          {new Intl.NumberFormat('fa-IR').format(item.value)}
+                        </Text>
+                        <View style={styles.barTrack}>
+                          <View
+                            style={[
+                              styles.bar,
+                              { backgroundColor: colors.primary, height: barHeight },
+                            ]}
+                          />
+                        </View>
+                        <Text style={[styles.chartDay, { color: colors.textSecondary }]}>
+                          {item.label}
+                        </Text>
+                      </View>
+                    );
+                  })}
                 </View>
-                <Text style={[styles.chartDay, { color: colors.textSecondary }]}>{item.day}</Text>
-              </View>
-            ))}
-          </View>
+              </ScrollView>
+            </>
+          )}
         </View>
 
         <View style={[styles.menu, { backgroundColor: colors.backgroundElement }]}>
@@ -198,6 +230,22 @@ function BackButton({ colors }: { colors: (typeof Colors)[keyof typeof Colors] }
       style={({ pressed }) => [styles.backButton, pressed ? styles.pressed : null]}>
       <SymbolView
         name={{ ios: 'chevron.right', android: 'arrow_forward', web: 'arrow_forward' }}
+        size={22}
+        tintColor={colors.text}
+      />
+    </Pressable>
+  );
+}
+
+function BackToMyAdsButton({ colors }: { colors: (typeof Colors)[keyof typeof Colors] }) {
+  return (
+    <Pressable
+      accessibilityLabel={strings.common.back}
+      accessibilityRole="button"
+      onPress={() => router.push('/my-ads')}
+      style={({ pressed }) => [styles.backButton, pressed ? styles.pressed : null]}>
+      <SymbolView
+        name={{ ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' }}
         size={22}
         tintColor={colors.text}
       />
@@ -274,6 +322,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '700', textAlign: 'right' },
   totalViews: { fontSize: 28, fontWeight: '700', textAlign: 'right' },
   chartCaption: { fontSize: 13, textAlign: 'right' },
+  chartScroll: { height: 150 },
   chart: {
     alignItems: 'flex-end',
     flexDirection: 'row',
@@ -282,10 +331,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: Spacing.two,
   },
-  chartColumn: { alignItems: 'center', flex: 1, gap: 5, height: '100%' },
+  chartColumn: { alignItems: 'center', gap: 5, height: '100%', width: 44 },
   chartValue: { fontSize: 10 },
   barTrack: { alignItems: 'center', flex: 1, justifyContent: 'flex-end', width: '100%' },
-  bar: { borderRadius: 5, minHeight: 8, maxWidth: 22, width: '72%' },
+  bar: { borderRadius: 5, maxWidth: 22, width: '72%' },
   chartDay: { fontSize: 11 },
   menu: { borderRadius: 14, paddingHorizontal: Spacing.three },
   menuItem: {
