@@ -533,13 +533,13 @@ const styles = StyleSheet.create({
   backArrow: { fontSize: 28, lineHeight: 32 },
   chipList: {
     alignItems: 'center',
-    direction: 'rtl',
+    // direction: 'rtl',
     flexDirection: 'row-reverse',
     gap: Spacing.two,
     minHeight: 42,
     paddingHorizontal: Spacing.one,
   },
-  chipScroller: { direction: 'rtl' },
+  chipScroller: {  },
   selectionChip: {
     alignItems: 'center',
     borderRadius: 16,

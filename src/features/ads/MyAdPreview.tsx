@@ -18,8 +18,8 @@ import {
   type MyAd,
 } from '@/features/ads/api';
 import { formatPersianRelativeTime } from '@/features/ads/relativeTime';
-import { getAuthErrorMessage } from '@/features/auth/api';
 import { registerAdViewOnce } from '@/features/ads/viewTracking';
+import { getAuthErrorMessage } from '@/features/auth/api';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type MediaSlide = { type: 'video' | 'image'; key: string; uri: string };
@@ -112,7 +112,6 @@ export default function MyAdPreviewScreen({
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        {/* <Text style={[styles.headerTitle, { color: colors.text }]}>{strings.tabs.myAdDetailsTitle}</Text> */}
         <Pressable
           accessibilityLabel={strings.common.back}
           accessibilityRole="button"

@@ -158,13 +158,13 @@ export default function MyAdManagementScreen() {
                 <View
                   accessibilityLabel={strings.tabs.adViewsTitle}
                   style={[styles.chart, { width: chartWidth }]}>
-                  {viewStatsQuery.data.series.map((item) => {
+                  {viewStatsQuery.data.series.map((item , index) => {
                     const barHeight =
                       item.value === 0
                         ? '0%'
                         : `${Math.max(4, (item.value / maxViewCount) * 100)}%`;
                     return (
-                      <View key={item.label} style={styles.chartColumn}>
+                      <View key={index} style={styles.chartColumn}>
                         <Text style={[styles.chartValue, { color: colors.textSecondary }]}>
                           {new Intl.NumberFormat('fa-IR').format(item.value)}
                         </Text>
@@ -331,11 +331,11 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '700', textAlign: 'right' },
   totalViews: { fontSize: 28, fontWeight: '700', textAlign: 'right' },
   chartCaption: { fontSize: 13, textAlign: 'right' },
-  chartScroll: { direction: 'ltr', height: 150 },
-  chartScrollContent: { direction: 'ltr' },
+  chartScroll: {  height: 150 },
+  chartScrollContent: {  },
   chart: {
     alignItems: 'flex-end',
-    direction: 'ltr',
+    // direction: 'ltr',
     flexDirection: 'row',
     gap: Spacing.two,
     height: 150,

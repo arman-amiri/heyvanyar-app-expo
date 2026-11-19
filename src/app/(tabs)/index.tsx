@@ -220,7 +220,8 @@ export default function HomeScreen() {
                   tintColor={colors.textSecondary}
                 />
               </Pressable>
-            </View>            <Pressable
+            </View>
+            <Pressable
               accessibilityLabel={strings.tabs.locationModalTitle}
               accessibilityRole="button"
               onPress={() => {
