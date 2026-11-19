@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { useState } from 'react';
+import { useRef, useState, type ComponentRef } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -32,6 +32,7 @@ export default function MyAdManagementScreen() {
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const [actionError, setActionError] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const chartScrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const adQuery = useQuery({
     queryKey: ['my-ad', shortLink],
     queryFn: () => getAdDetails(shortLink ?? ''),
@@ -51,6 +52,11 @@ export default function MyAdManagementScreen() {
   const maxViewCount = Math.max(
     1,
     ...(viewStatsQuery.data?.series.map((item) => item.value) ?? []),
+  );
+  const chartWidth = Math.max(
+    280,
+    (viewStatsQuery.data?.series.length ?? 0) * 44 +
+      Math.max(0, (viewStatsQuery.data?.series.length ?? 0) - 1) * Spacing.two,
   );
 
   if (isPreview) return <MyAdPreviewScreen />;
@@ -140,22 +146,25 @@ export default function MyAdManagementScreen() {
                   : strings.tabs.adViewsDayCaption}
               </Text>
               <ScrollView
+                ref={chartScrollRef}
                 horizontal
+                contentOffset={{ x: 0, y: 0 }}
+                onContentSizeChange={() =>
+                  chartScrollRef.current?.scrollTo({ x: 0, animated: false })
+                }
                 showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.chartScrollContent}
                 style={styles.chartScroll}>
                 <View
                   accessibilityLabel={strings.tabs.adViewsTitle}
-                  style={[
-                    styles.chart,
-                    { width: Math.max(280, viewStatsQuery.data.series.length * 44) },
-                  ]}>
-                  {viewStatsQuery.data.series.map((item, index) => {
+                  style={[styles.chart, { width: chartWidth }]}>
+                  {viewStatsQuery.data.series.map((item) => {
                     const barHeight =
                       item.value === 0
                         ? '0%'
                         : `${Math.max(4, (item.value / maxViewCount) * 100)}%`;
                     return (
-                      <View key={`${item.label}-${index}`} style={styles.chartColumn}>
+                      <View key={item.label} style={styles.chartColumn}>
                         <Text style={[styles.chartValue, { color: colors.textSecondary }]}>
                           {new Intl.NumberFormat('fa-IR').format(item.value)}
                         </Text>
@@ -163,7 +172,7 @@ export default function MyAdManagementScreen() {
                           <View
                             style={[
                               styles.bar,
-                              { backgroundColor: colors.primary, height: barHeight },
+                              { backgroundColor: colors.textSecondary, height: barHeight },
                             ]}
                           />
                         </View>
@@ -322,13 +331,15 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '700', textAlign: 'right' },
   totalViews: { fontSize: 28, fontWeight: '700', textAlign: 'right' },
   chartCaption: { fontSize: 13, textAlign: 'right' },
-  chartScroll: { height: 150 },
+  chartScroll: { direction: 'ltr', height: 150 },
+  chartScrollContent: { direction: 'ltr' },
   chart: {
     alignItems: 'flex-end',
+    direction: 'ltr',
     flexDirection: 'row',
     gap: Spacing.two,
     height: 150,
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     paddingTop: Spacing.two,
   },
   chartColumn: { alignItems: 'center', gap: 5, height: '100%', width: 44 },
